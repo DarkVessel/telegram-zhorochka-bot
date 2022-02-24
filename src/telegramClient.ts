@@ -15,7 +15,10 @@ const bot = new TelegramClient(process.env.BOT_TOKEN);
 bot.launch().then(() => {
     console.log("[CLIENT] Login!");
     bot.loadEvents();
-});
+    bot.loadCommands();
+}).catch(err => {
+    throw err;
+})
 // bot.start((ctx) => ctx.reply('Welcome'))
 // bot.help((ctx) => ctx.reply('Send me a sticker'))
 // bot.on('message', console.log);

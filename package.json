@@ -1,6 +1,6 @@
 {
   "name": "telegram-bot-jorashka",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Мой первый Телеграм-бот, функционал неизвестен.",
   "main": "./build/index.js",
   "scripts": {
