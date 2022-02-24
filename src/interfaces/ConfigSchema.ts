@@ -2,7 +2,8 @@
  * Интерфейс config.json
  */
 
- interface ConfigSchema {
+interface ConfigSchema {
+  logChannel: number;
 }
 
-export = ConfigSchema
+export = ConfigSchema;
