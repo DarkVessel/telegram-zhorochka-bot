@@ -1,106 +1,93 @@
-// import { TextChannel, Message } from 'discord.js';
-// import { timezone } from 'strftime';
+import ConfigManager from './ConfigManager';
+import { timezone } from 'strftime';
+import bot from '../telegramClient';
+import { Message } from 'telegraf/typings/core/types/typegram';
+const strftime = timezone(180);
 
-// const strftime = timezone(180);
-// const colors = {
-//   error: '31',
-//   warn: '33',
-// };
+const colors = {
+  error: '1',
+  warn: '3',
+};
 
-// interface BlockCode {
-//   code: string,
-//   msg: string
-// };
-// type returnMethods = boolean | Promise<Message>;
+type returnMethods = boolean | Promise<Message.TextMessage>;
+const strip: string = '-'.repeat(50);
+class LogManager {
+  // Последний путь, о котором сообщалось в логах.
+  static lastPath: string = '';
+  public path;
 
-// const strip: string = '-'.repeat(50);
-// class LogManager {
-//   // Каналы, куда будут отправляться логи.
-//   static channelConsole: null | TextChannel = null;
-//   static channelErrors: null | TextChannel = null;
+  // Последний тип лога который использовался, например warn
+  static lastTypeLog: string = '';
 
-//   // Последний путь, о котором сообщалось в логах.
-//   static lastPath: string = '';
-//   public path;
+  constructor(path: string) {
+    this.path = path;
+  };
 
-//   // Последний тип лога который использовался, например warn
-//   static lastTypeLog: string = ';'
+  /**
+     * Отправляет сообщение в консоль и чат в Телеграме.
+     * @param typeConsole { 'log' | 'error' | 'warn' } - Влияет на то, какая функция вызовется. console.error, console.warn или console.log
+     * @param typeLog Тип [ЛОГА]
+     * @param title - Сообщение
+     * @param blocks - Дополнительные блоки.
+     * @returns { returnMethods }
+     */
+  private _send(typeConsole: 'log' | 'error' | 'warn', typeLog: string, title: string, blocks?: Array<string>): returnMethods {
+    const time = strftime('%H:%M:%S', new Date());
 
-//   constructor(path: string) {
-//     this.path = path;
-//   };
+    let showPath = false;
+    if (this.path !== LogManager.lastPath || typeConsole !== LogManager.lastTypeLog) {
+      showPath = true;
+      LogManager.lastPath = this.path;
+      LogManager.lastTypeLog = typeConsole;
+      console.log(`\n\x1B[38;5;5m\x1B[1m${this.path}\x1B[22m\x1B[39m`);
+    }
 
-//   /**
-//      * Отправляет сообщение в консоль и чат в Дискорде.
-//      * @param type { 'log' | 'error' | 'warn' } - Тип лога
-//      * @param title - Сообщение
-//      * @param blocks - Дополнительные блоки.
-//      * @returns { returnMethods }
-//      */
-//   private _send(type: 'log' | 'error' | 'warn', title: string, blocks?: Array<BlockCode>): returnMethods {
-//     const time = strftime('%H:%M:%S', new Date());
+    // [type: time] >> Colors Text
+    console[typeConsole](`\x1B[38;5;${colors[typeConsole] ?? 14}m\x1B[1m[${typeLog.toUpperCase()}: ${time}]\x1B[22m\x1B[39m >> ${title}`);
+    if (blocks?.length) {
+      for (const block of blocks) {
+        console[typeConsole](`${strip}\n${block}\n${strip}`);
+      };
+    };
 
-//     let showPath = false;
-//     if (this.path !== LogManager.lastPath || type !== LogManager.lastTypeLog) {
-//       showPath = true;
-//       LogManager.lastPath = this.path;
-//       LogManager.lastTypeLog = type;
-//       console.log(`\n 033[01;44m${this.path}033[00m`);
-//     }
+    // Нужно ли отправлять логи?
+    if (typeConsole !== "error" || !ConfigManager.data.sendLogsToAGroup || !ConfigManager.data.logChannel) return false;
 
-//     // [type: time] >> Colors Text
-//     console[type](`[${type.toUpperCase()}: ${time}] >> ${colors[type] ? `033[01;${colors[type]}m` : ''}${title} 033[00m`);
-//     if (blocks?.length) {
-//       for (const block of blocks) {
-//         console[type](`${strip}\n${block.msg}\n${strip}`);
-//       };
-//     };
+    // Отступ.
+    let formatBlocks: string = '';
+    if (blocks?.length) {
+      title += '\n';
 
-//     // Если ни один канал не работает.
-//     if (!LogManager.channelConsole && !LogManager.channelErrors) return false;
+      formatBlocks = blocks.map(b => `\`\`\`\n${b}\n\`\`\``).join('\n');
+    };
 
-//     // Получить либо первый, либо второй канал.
-//     const channel = <TextChannel>(type !== 'log'
-//       ? (LogManager.channelErrors || LogManager.channelConsole)
-//       : (LogManager.channelConsole || LogManager.channelErrors)
-//       );
+    // Отправка лога.
+    const sendMessage = bot.telegram.sendMessage(ConfigManager.data.logChannel, `>> *${this.path}*\n[[ ${typeLog.toUpperCase()} ]] >> ${title}\n${formatBlocks ?? ''}`, { parse_mode: "Markdown" });
+    
+    sendMessage.catch((err) => {
+        console.error("[ERROR] Произошла ошибка при попытке отправить сообщение.\n" + err.stack);
+    });
 
-//     // Отступ.
-//     let formatBlocks: string = '';
-//     if (blocks?.length) {
-//       title += '\n';
+    return sendMessage;
+  }
 
-//       formatBlocks = blocks.map(b => `\`\`\`${b.code}\n${b.msg}\n\`\`\``).join('\n');
-//     };
+  public log(type: string, title: string, blocks?: Array<string>): returnMethods {
+    return this._send('log', type, `${title}`, blocks);
+  }
 
-//     // Отправка лога.
-//     return channel.send({
-//       content: `${showPath ? `>> **${this.path}**\n` : ''}${title}${formatBlocks ?? ''}`,
-//     });
-//   }
+  public error(type: string, title: string, error?: string, blocks?: Array<string>): returnMethods {
+    if (!blocks) blocks = [];
+    if (error) blocks.push(error);
 
-//   public log(title: string, blocks?: Array<BlockCode>): returnMethods {
-//     return this._send('log', `**${title}**`, blocks);
-//   }
+    return this._send('error', type, `${title}`, blocks);
+  }
 
-//   public error(title: string, error?: string, blocks?: Array<BlockCode>): returnMethods {
-//     if (error) {
-//       const blockData = { code: 'js', msg: error };
-//       if (!blocks) blocks = [blockData];
-//       else blocks.push(blockData);
-//     }
-//     return this._send('error', `**${title}**`, blocks);
-//   }
+  public warn(type: string, title: string, warn?: string, blocks?: Array<string>): returnMethods {
+    if (!blocks) blocks = [];
+    if (warn) blocks.push(warn);
 
-//   public warn(title: string, warn?: string, blocks?: Array<BlockCode>): returnMethods {
-//     if (warn) {
-//       const blockData = { code: 'js', msg: warn };
-//       if (!blocks) blocks = [blockData];
-//       else blocks.push(blockData);
-      
-//     }
-//     return this._send('warn', `**${title}**`, blocks);
-//   }
-// }
+    return this._send('warn', type, `${title}`, blocks);
+  }
+}
 
-// export default LogManager;
+export default LogManager;

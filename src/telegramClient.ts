@@ -9,11 +9,16 @@
 //     throw err;
 // });
 
+import ConfigManager from "./classes/ConfigManager";
+import LogManager from "./classes/LogManager";
 import TelegramClient from "./classes/TelegramClient";
 
 const bot = new TelegramClient(process.env.BOT_TOKEN);
+new ConfigManager();
 bot.launch().then(() => {
-    console.log("[CLIENT] Login!");
+    const logmanager = new LogManager("./src/telegramClient.ts");
+    logmanager.log("CLIENT", "Login!");
+
     bot.loadEvents();
     bot.loadCommands();
 }).catch(err => {
@@ -25,4 +30,4 @@ bot.launch().then(() => {
 // bot.hears('hi', (ctx) => ctx.reply('Hey there'))
 
 
-module.exports = bot;
+export default bot;

@@ -31,7 +31,7 @@
       "noImplicitUseStrict": false, // Не записывать 'use strict' в итоговый выходной файл?
       "pretty": true, // Окрашивать в терминале сообщения об ошибках.
       "removeComments": false, // Удалить все комментарии из итогового файла.
-      "sourceMap": false, // Создавать ли соответствующие source map файлы ".map"?
+      "sourceMap": true, // Создавать ли соответствующие source map файлы ".map"?
       "strict": false, // Включить ли все строги проверки типов сразу: noImplicitAny, noImplicitThis, alwaysStrict, strictNullChecks, strictFunctionTypes, strictPropertyInitialization?
       "strictNullChecks": true, // Значения "null" и "undefined" могут быть присвоены только значениям данного типа и значениям только с типом "any"?
       "target": "es2021", // Тип кода создаваемого итогового файла.

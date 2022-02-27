@@ -3,7 +3,9 @@ import { Telegraf } from "telegraf";
 import { existsSync, readdirSync, statSync } from "fs";
 
 import CommandData from "../interfaces/CommandData";
+import LogManager from "./LogManager";
 
+const logmanager = new LogManager("./src/classes/TelegramClient.ts");
 interface UnloadedCommands {
   path: string,
   error: Error
@@ -32,17 +34,17 @@ class TelegramClient extends Telegraf {
     );
 
     // Загружаем их.
-    console.log("[EVENTS] Загрузка ивентов.");
+    logmanager.log("EVENTS", "Загрузка ивентов.");
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       try {
-        console.log(`[EVENTS] ${i + 1}. Загрузка ../events/${file}`);
+        logmanager.log("EVENTS", `${i + 1}. Загрузка ../events/${file}`);
         require(`../events/${file}`);
       } catch (err) {
-        console.error(`Ошибка при загрузке ../events/"${file}"\n${err.stack}`);
+        logmanager.error("COMMANDS", `Ошибка при загрузке ../events/"${file}"`, err.stack);
       }
     }
-    console.log("[EVENTS] Загрузка завершена!");
+    logmanager.log("EVENTS", "Загрузка завершена!");
   }
 
   /**
@@ -56,14 +58,14 @@ class TelegramClient extends Telegraf {
       // Проверить команды на их наличие
       const commandCheck = this.commands.has(command.info.name);
       if (commandCheck) {
-        console.error(`Kоманда по пути \`${path}\` конфликтует уже с существующей командой \`${command.cmd.name}\`\nКоманда не загружена!`);
+        logmanager.error("COMMANDS", `Kоманда по пути \`${path}\` конфликтует уже с существующей командой \`${command.cmd.name}\`\nКоманда не загружена!`);
         return;
       }
 
       this.commands.set(command.info.name, command);
       this.command(command.info.name, command.run);
     } catch (error) {
-      console.error(`При загрузке команды \`${path}\` произошла ошибка:\n`, error.stack);
+      logmanager.error("COMMANDS", `При загрузке команды \`${path}\` произошла ошибка:\n`, error.stack);
       this.unloadedCommands.push({ path, error });
     }
   }
@@ -90,7 +92,7 @@ class TelegramClient extends Telegraf {
     // Загрузить команды.
     for (const file of files) {
       const pathRelative = relative("build/src/", path + `${file}`);
-      console.log(`[COMMANDS] ${this.commands.size+1}. Загрузка ${pathRelative}`);
+      logmanager.log("COMMANDS", `${this.commands.size+1}. Загрузка ${pathRelative}`);
       this.addCommand(pathRelative);
     }
   }
@@ -103,9 +105,9 @@ class TelegramClient extends Telegraf {
     this.unloadedCommands = [];
 
     this.loadCommandsFromFolder("./build/commands/");
-    console.log("[COMMANDS] Загрузка завершена!");
+    logmanager.log("COMMANDS", "Загрузка завершена!");
     if (this.unloadedCommands.length) {
-      console.log(`[COMMANDS] Не было загружено ${this.unloadedCommands.length} команд.`);
+      logmanager.log("COMMANDS", `Не было загружено ${this.unloadedCommands.length} команд.`);
     }
   }
 }
