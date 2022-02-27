@@ -1,5 +1,7 @@
-const client = require("../../telegramClient")
+import ConfigManager from "../../classes/ConfigManager";
+import LogManager from "../../classes/LogManager";
+
+const log = new LogManager("./src/handlers/start/hello.ts");
 module.exports = (ctx) => {
-    ctx.reply("Hi!");
-    client.telegram.sendMessage(-787598822, "test")
+    log.log("TEST", "Test");
 }
