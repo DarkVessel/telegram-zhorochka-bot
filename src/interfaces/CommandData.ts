@@ -1,4 +1,5 @@
-import { Message } from "telegraf/typings/core/types/typegram";
+import { Context } from "telegraf";
+import { Update } from "telegraf/typings/core/types/typegram";
 
 interface CommandData {
     name: string, // Название команды
@@ -6,7 +7,7 @@ interface CommandData {
      * Функция, вызывающаяся при прописывании команды.
      * @param ctx - Экземпляр сообщения.
      */
-    run(message: Message): void | Promise<any>
+    run(ctx: Context<Update>): void | Promise<any>
 };
 
 export = CommandData;

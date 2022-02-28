@@ -4,6 +4,7 @@ import { existsSync, readdirSync, statSync } from "fs";
 
 import CommandData from "../interfaces/CommandData";
 import LogManager from "./LogManager";
+import Command from "../handlers/Command";
 
 const logmanager = new LogManager("./src/classes/TelegramClient.ts");
 interface UnloadedCommands {
@@ -53,17 +54,18 @@ class TelegramClient extends Telegraf {
    */
   public addCommand(path: string) {
     try {
-      const command = require(path);
+      const Command = require(path);
+      const command: Command = new Command();
 
       // Проверить команды на их наличие
-      const commandCheck = this.commands.has(command.info.name);
+      const commandCheck = this.commands.has(command.cmd.name);
       if (commandCheck) {
         logmanager.error("COMMANDS", `Kоманда по пути \`${path}\` конфликтует уже с существующей командой \`${command.cmd.name}\`\nКоманда не загружена!`);
         return;
       }
 
-      this.commands.set(command.info.name, command);
-      this.command(command.info.name, command.run);
+      this.commands.set(command.cmd.name, command.cmd);
+      this.command(command.cmd.name, command.cmd.run);
     } catch (error) {
       logmanager.error("COMMANDS", `При загрузке команды \`${path}\` произошла ошибка:\n`, error.stack);
       this.unloadedCommands.push({ path, error });
