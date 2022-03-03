@@ -34,6 +34,20 @@ const schema: ConfigSchema = {
         description: "ID сообщения, в котором прописаны правила.",
         mutable: true,
         show: true
+    },
+    bot_owner: {
+        type: "number",
+        default: undefined,
+        description: "ID аккаунта создателя бота.",
+        mutable: false,
+        show: true
+    },
+    chat_id: {
+        type: "number",
+        default: undefined,
+        description: "ID основного чата, где будут работать команды модерации.",
+        mutable: true,
+        show: true
     }
 }
 

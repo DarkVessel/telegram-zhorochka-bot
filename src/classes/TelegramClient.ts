@@ -1,10 +1,11 @@
 import { relative } from "path";
-import { Telegraf } from "telegraf";
+import { Context, Telegraf } from "telegraf";
 import { existsSync, readdirSync, statSync } from "fs";
 
 import CommandData from "../interfaces/CommandData";
 import LogManager from "./LogManager";
 import Command from "../handlers/Command";
+import { Update } from "telegraf/typings/core/types/typegram";
 
 const logmanager = new LogManager("./src/classes/TelegramClient.ts");
 interface UnloadedCommands {
@@ -15,8 +16,8 @@ class TelegramClient extends Telegraf {
   public commands: Map<string, CommandData>;
   public unloadedCommands: Array<UnloadedCommands>;
 
-  public constructor(options) {
-    super(options);
+  public constructor(token: string, options?: Partial<Telegraf.Options<Context<Update>>> | undefined) {
+    super(token, options);
 
     this.commands = new Map();
     this.unloadedCommands = [];

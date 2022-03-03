@@ -28,7 +28,7 @@ class ConfigManager {
       // Записываем файл.
       writeFileSync(
         "./src/config.json",
-        JSON.stringify(ConfigManager.data)
+        JSON.stringify(ConfigManager.data, null, 4)
       );
     } catch (err) {
       logmanager.error(

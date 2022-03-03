@@ -13,7 +13,7 @@ import ConfigManager from "./classes/ConfigManager";
 import LogManager from "./classes/LogManager";
 import TelegramClient from "./classes/TelegramClient";
 
-const bot = new TelegramClient(process.env.BOT_TOKEN);
+const bot = new TelegramClient(<string>process.env.BOT_TOKEN);
 new ConfigManager();
 bot.launch().then(() => {
     const logmanager = new LogManager("./src/telegramClient.ts");
