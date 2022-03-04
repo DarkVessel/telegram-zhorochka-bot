@@ -23,7 +23,7 @@ if [ ${#missingDependencies[@]} -gt 0 ]; then
   echo -e "${COLOR_RED}Установите и возвращайтесь.${ENDCOLOR}"
   exit
 fi
-echo -e "> ${COLOR_GREEN}Всё в порядке...${ENDCOLOR}"
+echo -e "${COLOR_GREEN}Всё в порядке.${ENDCOLOR}"
 echo -e "> ${COLOR_YELLOW}Устанавливаю npm-модули...${ENDCOLOR}"
 npm i 
 
