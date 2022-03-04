@@ -8,13 +8,15 @@ class Test extends Command {
     super({
       name: "test",
       async run(ctx) {
-        const markup = Markup.inlineKeyboard([Markup.button.callback('Открыть Промиз?', 'open_promise')]);
-        ctx.reply("Promise<>?", markup);
-        
-        bot.action("open_promise", (ctx) => {
-            ctx.answerCbQuery();
-            ctx.editMessageText("Открыл!");
-        })
+        // @ts-ignore
+        const chatAdministrators = await ctx.getChatAdministrators();
+        console.log(chatAdministrators)
+        // ctx.restrictChatMember(message.from.id, { permissions: {
+        //   can_send_messages: false,
+        //   can_change_info: false,
+        // }, until_date: Math.floor(Date.now() / 1000) + 60 });
+
+        // ctx.banChatMember(message.from.id, Math.floor(Date.now() / 1000) + 60)
       },
     });
   }
