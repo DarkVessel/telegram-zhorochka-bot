@@ -106,3 +106,6 @@ dist
 build/
 
 package-lock.json
+
+src/config.json
+src/warns.json
