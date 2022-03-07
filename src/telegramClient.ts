@@ -9,25 +9,17 @@
 //     throw err;
 // });
 
-import ConfigManager from "./classes/ConfigManager";
-import LogManager from "./classes/LogManager";
-import TelegramClient from "./classes/TelegramClient";
+import LogManager from './classes/LogManager'
+import TelegramClient from './classes/TelegramClient'
 
-const bot = new TelegramClient(<string>process.env.BOT_TOKEN);
-new ConfigManager();
+const bot = new TelegramClient(<string>process.env.BOT_TOKEN)
 bot.launch().then(() => {
-    const logmanager = new LogManager("./src/telegramClient.ts");
-    logmanager.log("CLIENT", "Login!");
+  const logmanager = new LogManager('./src/telegramClient.ts')
+  logmanager.log('CLIENT', 'Login!')
 
-    bot.loadEvents();
-    bot.loadCommands();
+  bot.startHandlers()
 }).catch(err => {
-    throw err;
+  throw err
 })
-// bot.start((ctx) => ctx.reply('Welcome'))
-// bot.help((ctx) => ctx.reply('Send me a sticker'))
-// bot.on('message', console.log);
-// bot.hears('hi', (ctx) => ctx.reply('Hey there'))
 
-
-export default bot;
+export default bot

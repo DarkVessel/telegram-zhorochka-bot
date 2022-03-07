@@ -1,41 +1,40 @@
-import { existsSync, readFileSync, writeFileSync } from "fs";
-import configSchema from "../configSchema";
-import ConfigJSON from "../interfaces/ConfigJSON";
-import LogManager from "./LogManager";
+import { existsSync, readFileSync, writeFileSync } from 'fs'
+import configSchema from '../configSchema'
+import ConfigJSON from '../interfaces/ConfigJSON'
 
-const logmanager = new LogManager("./src/classes/ConfigManager.ts");
 class ConfigManager {
-  static data: ConfigJSON = {};
-  static initialized = false; // Определяет, инициализирован ли конфиг.
+  static data: ConfigJSON = {}
 
-  constructor() {
-    if (ConfigManager.initialized) return;
-    ConfigManager.initialized = true;
+  constructor (public path: string) {
+    this.path = path
+  }
 
-    if (!existsSync("./src/config.json")) {
-      writeFileSync("./src/config.json", "{}");
-    };
+  public start () {
+    if (!existsSync(this.path)) {
+      writeFileSync(this.path, '{}')
+    }
 
     this.reread()
-    this.rereadSchema();
+    this.rereadSchema()
   }
+
   /**
    * Перезаписать файл конфига.
    * @returns { void }
    */
-   overwrite(): void {
+  public overwrite (): void {
     try {
       // Записываем файл.
       writeFileSync(
-        "./src/config.json",
+        this.path,
         JSON.stringify(ConfigManager.data, null, 4)
-      );
+      )
     } catch (err) {
-      logmanager.error(
-        "CONFIG_MANAGER",
-        "Произошла ошибка при попытке записать данные в `config.json`\n",
+      console.error(
+        '[CONFIG_MANAGER]',
+        'Произошла ошибка при попытке записать данные в "' + this.path + '"\n',
         err.stack
-      );
+      )
     }
   }
 
@@ -43,77 +42,77 @@ class ConfigManager {
    * Перечитать файл конфига.
    * @returns { ConfigJSON }
    */
-  reread(): ConfigJSON {
+  public reread (): ConfigJSON {
     try {
       // Читаем файл.
-      const data = readFileSync("./src/config.json");
-      ConfigManager.data = JSON.parse(data.toString());
+      const data = readFileSync(this.path)
+      ConfigManager.data = JSON.parse(data.toString())
     } catch (error) {
       // Сообщаем об ошибке.
-      logmanager.error(
-        "CONFIG_MANAGER",
-        "Произошла ошибка при попытке прочитать `config.json`\nСброс конфига!\n",
+      console.error(
+        '[CONFIG_MANAGER]',
+        `Произошла ошибка при попытке прочитать "${this.path}"\nСброс конфига!\n`,
         error.stack
-      );
-      this.reset();
+      )
+      this.reset()
     }
-    return ConfigManager.data;
+    return ConfigManager.data
   }
 
   /**
    * Вернуть дефолтный конфиг.
    * @returns { ConfigJSON }
    */
-  returnDefaultConfig(): ConfigJSON {
-    const config = {};
+  public returnDefaultConfig (): ConfigJSON {
+    const config = {}
     for (const key in configSchema) {
-      if (!Object.prototype.hasOwnProperty.call(configSchema, key)) continue;
-      config[key] = configSchema[key].default;
+      if (!Object.prototype.hasOwnProperty.call(configSchema, key)) continue
+      config[key] = configSchema[key].default
     }
 
-    return config;
+    return config
   }
 
   /**
-   * Перезаписывает файл `config.json` по дефолту.
+   * Перезаписывает файл конфига по дефолту.
    */
-  reset(): void {
-    ConfigManager.data = this.returnDefaultConfig();
-    return this.overwrite(); // Переписать конфиг.
+  public reset (): void {
+    ConfigManager.data = this.returnDefaultConfig()
+    return this.overwrite() // Переписать конфиг.
   }
 
   /**
    * Перечитать схему и дополнить `config.json`
    * @returns { Promise<void> }
    */
-  rereadSchema(): void | Promise<void> {
-    const data = {};
+  public rereadSchema (): void | Promise<void> {
+    const data = {}
     // Читаем ключи со схемы.
     for (const key in configSchema) {
       // Проверяем, есть ли в конфиге этот ключ.
       if (ConfigManager.data[key]) {
-        data[key] = ConfigManager.data[key];
+        data[key] = ConfigManager.data[key]
       } else if (configSchema[key].default !== undefined) {
         // Если нет - добавляем.
-        data[key] = configSchema[key].default;
+        data[key] = configSchema[key].default
       }
     }
 
     // Проверка двух объектов.
-    const dataKeys = Object.keys(data);
-    const dataKeys2 = Object.keys(ConfigManager.data);
+    const dataKeys = Object.keys(data)
+    const dataKeys2 = Object.keys(ConfigManager.data)
 
-    if (dataKeys.length == dataKeys2.length) {
-      dataKeys.sort();
-      dataKeys2.sort();
+    if (dataKeys.length === dataKeys2.length) {
+      dataKeys.sort()
+      dataKeys2.sort()
 
-      if (dataKeys.join(",") === dataKeys2.join(",")) return;
+      if (dataKeys.join(',') === dataKeys2.join(',')) return
     }
 
     // Переписываем конфиг.
-    ConfigManager.data = data;
-    return this.overwrite();
+    ConfigManager.data = data
+    return this.overwrite()
   }
 }
 
-export default ConfigManager;
+export default ConfigManager

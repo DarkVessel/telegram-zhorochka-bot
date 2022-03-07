@@ -6,7 +6,7 @@ type JSONType = ValidScalars | ValidScalars[] | { [key: string]: ValidScalars | 
  */
 interface ConfigSchema {
   [key: string]: {
-    type: "string" | "number" | "boolean" | "array" | "object";
+    type: 'string' | 'number' | 'boolean' | 'array' | 'object';
     default: JSONType | undefined;
     description?: string;
     mutable: boolean;

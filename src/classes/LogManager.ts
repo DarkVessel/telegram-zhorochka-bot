@@ -1,27 +1,27 @@
-import ConfigManager from './ConfigManager';
-import { timezone } from 'strftime';
-import bot from '../telegramClient';
-import { Message } from 'telegraf/typings/core/types/typegram';
-const strftime = timezone(180);
+import ConfigManager from './ConfigManager'
+import { timezone } from 'strftime'
+import bot from '../telegramClient'
+import { Message } from 'telegraf/typings/core/types/typegram'
+const strftime = timezone(180)
 
 const colors = {
   error: '1',
-  warn: '3',
-};
+  warn: '3'
+}
 
 type returnMethods = boolean | Promise<Message.TextMessage>;
-const strip: string = '-'.repeat(50);
+const strip: string = '-'.repeat(50)
 class LogManager {
   // Последний путь, о котором сообщалось в логах.
-  static lastPath: string = '';
-  public path;
+  static lastPath: string = ''
+  public path
 
   // Последний тип лога который использовался, например warn
-  static lastTypeLog: string = '';
+  static lastTypeLog: string = ''
 
-  constructor(path: string) {
-    this.path = path;
-  };
+  constructor (path: string) {
+    this.path = path
+  }
 
   /**
      * Отправляет сообщение в консоль и чат в Телеграме.
@@ -31,63 +31,61 @@ class LogManager {
      * @param blocks - Дополнительные блоки.
      * @returns { returnMethods }
      */
-  private _send(typeConsole: 'log' | 'error' | 'warn', typeLog: string, title: string, blocks?: Array<string>): returnMethods {
-    const time = strftime('%H:%M:%S', new Date());
+  private _send (typeConsole: 'log' | 'error' | 'warn', typeLog: string, title: string, blocks?: Array<string>): returnMethods {
+    const time = strftime('%H:%M:%S', new Date())
 
-    let showPath = false;
     if (this.path !== LogManager.lastPath || typeConsole !== LogManager.lastTypeLog) {
-      showPath = true;
-      LogManager.lastPath = this.path;
-      LogManager.lastTypeLog = typeConsole;
-      console.log(`\n\x1B[38;5;5m\x1B[1m${this.path}\x1B[22m\x1B[39m`);
+      LogManager.lastPath = this.path
+      LogManager.lastTypeLog = typeConsole
+      console.log(`\n\x1B[38;5;5m\x1B[1m${this.path}\x1B[22m\x1B[39m`)
     }
 
     // [type: time] >> Colors Text
-    console[typeConsole](`\x1B[38;5;${colors[typeConsole] ?? 14}m\x1B[1m[${typeLog.toUpperCase()}: ${time}]\x1B[22m\x1B[39m >> ${title}`);
+    console[typeConsole](`\x1B[38;5;${colors[typeConsole] ?? 14}m\x1B[1m[${typeLog.toUpperCase()}: ${time}]\x1B[22m\x1B[39m >> ${title}`)
     if (blocks?.length) {
       for (const block of blocks) {
-        console[typeConsole](`${strip}\n${block}\n${strip}`);
-      };
-    };
+        console[typeConsole](`${strip}\n${block}\n${strip}`)
+      }
+    }
 
     // Нужно ли отправлять логи?
-    if (typeConsole !== "error" || !ConfigManager.data.sendLogsToAGroup || !ConfigManager.data.logChannel) return false;
+    if (typeConsole !== 'error' || !ConfigManager.data.sendLogsToAGroup || !ConfigManager.data.logChannel) return false
 
     // Отступ.
-    let formatBlocks: string = '';
+    let formatBlocks: string = ''
     if (blocks?.length) {
-      title += '\n';
+      title += '\n'
 
-      formatBlocks = blocks.map(b => `\`\`\`\n${b}\n\`\`\``).join('\n');
-    };
+      formatBlocks = blocks.map(b => `\`\`\`\n${b}\n\`\`\``).join('\n')
+    }
 
     // Отправка лога.
-    const sendMessage = bot.telegram.sendMessage(ConfigManager.data.logChannel, `>> *${this.path}*\n[[ ${typeLog.toUpperCase()} ]] >> ${title}\n${formatBlocks ?? ''}`, { parse_mode: "Markdown" });
-    
+    const sendMessage = bot.telegram.sendMessage(ConfigManager.data.logChannel, `>> *${this.path}*\n[[ ${typeLog.toUpperCase()} ]] >> ${title}\n${formatBlocks ?? ''}`, { parse_mode: 'Markdown' })
+
     sendMessage.catch((err) => {
-        console.error("[ERROR] Произошла ошибка при попытке отправить сообщение.\n" + err.stack);
-    });
+      console.error('[ERROR] Произошла ошибка при попытке отправить сообщение.\n' + err.stack)
+    })
 
-    return sendMessage;
+    return sendMessage
   }
 
-  public log(type: string, title: string, blocks?: Array<string>): returnMethods {
-    return this._send('log', type, `${title}`, blocks);
+  public log (type: string, title: string, blocks?: Array<string>): returnMethods {
+    return this._send('log', type, `${title}`, blocks)
   }
 
-  public error(type: string, title: string, error?: string, blocks?: Array<string>): returnMethods {
-    if (!blocks) blocks = [];
-    if (error) blocks.push(error);
+  public error (type: string, title: string, error?: string, blocks?: Array<string>): returnMethods {
+    if (!blocks) blocks = []
+    if (error) blocks.push(error)
 
-    return this._send('error', type, `${title}`, blocks);
+    return this._send('error', type, `${title}`, blocks)
   }
 
-  public warn(type: string, title: string, warn?: string, blocks?: Array<string>): returnMethods {
-    if (!blocks) blocks = [];
-    if (warn) blocks.push(warn);
+  public warn (type: string, title: string, warn?: string, blocks?: Array<string>): returnMethods {
+    if (!blocks) blocks = []
+    if (warn) blocks.push(warn)
 
-    return this._send('warn', type, `${title}`, blocks);
+    return this._send('warn', type, `${title}`, blocks)
   }
 }
 
-export default LogManager;
+export default LogManager

@@ -1,15 +1,11 @@
-import { Markup } from "telegraf";
-import { button } from "telegraf/typings/markup";
-import Command from "../handlers/Command";
-import bot from "../telegramClient";
-
+import Command from '../handlers/Command'
 class Test extends Command {
-  constructor() {
+  constructor () {
     super({
-      name: "test",
-      async run(ctx) {
+      name: 'test',
+      async run (ctx) {
         // @ts-ignore
-        const chatAdministrators = await ctx.getChatAdministrators();
+        const chatAdministrators = await ctx.getChatAdministrators()
         console.log(chatAdministrators)
         // ctx.restrictChatMember(message.from.id, { permissions: {
         //   can_send_messages: false,
@@ -17,8 +13,8 @@ class Test extends Command {
         // }, until_date: Math.floor(Date.now() / 1000) + 60 });
 
         // ctx.banChatMember(message.from.id, Math.floor(Date.now() / 1000) + 60)
-      },
-    });
+      }
+    })
   }
 }
 export = Test;
