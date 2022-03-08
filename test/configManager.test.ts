@@ -1,18 +1,8 @@
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import ConfigManager from '../src/classes/ConfigManager'
+import configSchema from '../src/configSchema'
 
-import configSchema from '../configSchema'
-function returnDefaultConfig() {
-  const config = {}
-  for (const key in configSchema) {
-    if (!Object.prototype.hasOwnProperty.call(configSchema, key)) continue
-    config[key] = configSchema[key].default
-  }
-
-  return config
-}
-
-function initializeTheConfigManager() {
+function initializeTheConfigManager () {
   const fileName = `test_file_${Math.random()}.json`
   const configManager = new ConfigManager(fileName)
   configManager.start()
@@ -68,8 +58,54 @@ ${JSONstr}`)
   })
 
   describe('#returnDefaultConfig', function () {
-    it('Сравнение вывода', function () {
-      // const {  }
+    it('Работа функции', function () {
+      const { configManager, fileName } = initializeTheConfigManager()
+      configManager.returnDefaultConfig()
+      rmSync(fileName)
+    })
+  })
+
+  describe('#reset', function () {
+    it('Перезапись файла', function () {
+      const { configManager, fileName } = initializeTheConfigManager()
+      writeFileSync(fileName, '...')
+      configManager.reset()
+      const fileContent = readFileSync(fileName).toString()
+      rmSync(fileName)
+      if (fileContent === '...') throw Error('Файл не перезаписался.')
+    })
+  })
+
+  describe('#rereadSchema', function () {
+    it('Сравнение файла до и после', function () {
+      const { configManager, fileName } = initializeTheConfigManager()
+      writeFileSync(fileName, '{}')
+      ConfigManager.data = {}
+
+      const keys = Object.keys(configSchema).filter(k => configSchema[k].default !== undefined)
+      if (!keys.length) return console.warn('[WARN]: В configSchema нет дефолтных значений, проверка отменяется.')
+
+      configManager.rereadSchema()
+      const fileContent = readFileSync(fileName).toString()
+      rmSync(fileName)
+
+      const keysData = Object.keys(ConfigManager.data)
+      if (!keysData.length) throw Error('Объект не изменился.')
+      if (keysData.join(',') !== keys.join(',')) {
+        throw Error(`Объект изменился неправильно.
+Должно быть ${keys.length} ключей (${keys.join(', ')})
+
+А в объекте ${keysData.length} ключей (${keysData.join(', ')})`)
+      }
+
+      const fileKeys = Object.keys(JSON.parse(fileContent))
+      if (fileContent === '{}') throw Error('Файл не изменился.')
+      if (fileKeys.join(',') !== keys.join(',')) {
+        throw Error(`Файл перезаписался неправильно.
+Должно быть ${keys.length} ключей (${keys.join(', ')})
+      
+А в файле ${fileKeys.length} ключей (${fileKeys.join(', ')})`)
+      }
     })
   })
 })

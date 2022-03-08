@@ -1,19 +1,30 @@
+// Экспортируем функции из fs.
 import { existsSync, readFileSync, writeFileSync } from 'fs'
+
+// В конфиг-схеме хранятся данные о том, как должен быть устроен конфиг.
 import configSchema from '../configSchema'
+
+// Копия configSchema, но она отображает только как будет выглядить сам config.json
 import ConfigJSON from '../interfaces/ConfigJSON'
 
 class ConfigManager {
+  // Данный элемент статистический, это означает что к нему можно обращаться напрямую, без инициализации класса.
+  // В data хранится конфиг из config.json
   static data: ConfigJSON = {}
 
+  // Конструктор вызывается при инициализации класса.
   constructor (public path: string) {
-    this.path = path
+    this.path = path // Указываем менеджеру, что конфиг находится по такому-то пути.
   }
 
   public start () {
+    // Проверяет наличие конфиг-файла.
     if (!existsSync(this.path)) {
+      // Если конфиг-файл не существует, мы создаём его с содержимым "{}"
       writeFileSync(this.path, '{}')
     }
 
+    // Вызываем функции reread, rereadSchema
     this.reread()
     this.rereadSchema()
   }
@@ -46,9 +57,10 @@ class ConfigManager {
     try {
       // Читаем файл.
       const data = readFileSync(this.path)
+
+      // Присваиваем новое значение для data.
       ConfigManager.data = JSON.parse(data.toString())
     } catch (error) {
-      // Сообщаем об ошибке.
       console.error(
         '[CONFIG_MANAGER]',
         `Произошла ошибка при попытке прочитать "${this.path}"\nСброс конфига!\n`,
@@ -65,11 +77,13 @@ class ConfigManager {
    */
   public returnDefaultConfig (): ConfigJSON {
     const config = {}
+    // Проходимся по схеме конфига.
     for (const key in configSchema) {
       if (!Object.prototype.hasOwnProperty.call(configSchema, key)) continue
       config[key] = configSchema[key].default
     }
 
+    // Выводим дефолтный конфиг.
     return config
   }
 
@@ -77,8 +91,9 @@ class ConfigManager {
    * Перезаписывает файл конфига по дефолту.
    */
   public reset (): void {
+    // Присваиваем значению data дефолтный конфиг.
     ConfigManager.data = this.returnDefaultConfig()
-    return this.overwrite() // Переписать конфиг.
+    return this.overwrite() // Перезаписываем файл.
   }
 
   /**
@@ -93,12 +108,12 @@ class ConfigManager {
       if (ConfigManager.data[key]) {
         data[key] = ConfigManager.data[key]
       } else if (configSchema[key].default !== undefined) {
-        // Если нет - добавляем.
+        // Если нет - добавляем новое значение, дефолтное.
         data[key] = configSchema[key].default
       }
     }
 
-    // Проверка двух объектов.
+    // Проверка двух объектов, если объекты равны - перезапись не делается.
     const dataKeys = Object.keys(data)
     const dataKeys2 = Object.keys(ConfigManager.data)
 

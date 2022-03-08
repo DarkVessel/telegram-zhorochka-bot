@@ -1,7 +1,7 @@
 import ConfigManager from './ConfigManager'
 import { timezone } from 'strftime'
-import bot from '../telegramClient'
 import { Message } from 'telegraf/typings/core/types/typegram'
+import TelegramClient from './TelegramClient'
 const strftime = timezone(180)
 
 const colors = {
@@ -19,6 +19,7 @@ class LogManager {
   // Последний тип лога который использовался, например warn
   static lastTypeLog: string = ''
 
+  static telegramClient: TelegramClient
   constructor (path: string) {
     this.path = path
   }
@@ -48,6 +49,8 @@ class LogManager {
       }
     }
 
+    if (!LogManager.telegramClient) return true
+
     // Нужно ли отправлять логи?
     if (typeConsole !== 'error' || !ConfigManager.data.sendLogsToAGroup || !ConfigManager.data.logChannel) return false
 
@@ -60,7 +63,7 @@ class LogManager {
     }
 
     // Отправка лога.
-    const sendMessage = bot.telegram.sendMessage(ConfigManager.data.logChannel, `>> *${this.path}*\n[[ ${typeLog.toUpperCase()} ]] >> ${title}\n${formatBlocks ?? ''}`, { parse_mode: 'Markdown' })
+    const sendMessage = LogManager.telegramClient.telegram.sendMessage(ConfigManager.data.logChannel, `>> *${this.path}*\n[[ ${typeLog.toUpperCase()} ]] >> ${title}\n${formatBlocks ?? ''}`, { parse_mode: 'Markdown' })
 
     sendMessage.catch((err) => {
       console.error('[ERROR] Произошла ошибка при попытке отправить сообщение.\n' + err.stack)
