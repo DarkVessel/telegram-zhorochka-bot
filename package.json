@@ -1,5 +1,5 @@
 {
-  "name": "telegram-bot-jorashka",
+  "name": "telegram-bot-zhorochka",
   "version": "1.5.0",
   "description": "Мой первый Телеграм-бот, функционал неизвестен.",
   "main": "./build/index.js",
@@ -8,21 +8,22 @@
     "node": ">=16.14.0"
   },
   "scripts": {
-    "start"   : "node build/index.js",
-    "settings": "node scripts/settings.js",
-    "init"    : "sh scripts/initialization.sh",
-    "test"    : "mocha --require ts-node/register test/*.test.ts"
+    "start"    : "node build/index.js",
+    "settings" : "node scripts/settings.js",
+    "init"     : "sh scripts/initialization.sh",
+    "test"     : "mocha --require ts-node/register test/*.test.ts",
+    "pm2_start": "pm2 start build/index.js -n telegram-zhorochka"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DarkVessel/telegram-jorashka.git"
+    "url": "git+https://github.com/DarkVessel/telegram-zhorochka.git"
   },
   "author": "DarkVessel",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/DarkVessel/telegram-jorashka/issues"
+    "url": "https://github.com/DarkVessel/telegram-zhorochka/issues"
   },
-  "homepage": "https://github.com/DarkVessel/telegram-jorashka#readme",
+  "homepage": "https://github.com/DarkVessel/telegram-zhorochka#readme",
   "dependencies": {
     "@types/node": "^17.0.18",
     "dotenv": "^16.0.0",

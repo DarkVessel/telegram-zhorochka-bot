@@ -7,6 +7,10 @@ import UnloadedCommands from '../interfaces/UnloadedCommands'
 
 import LogManager from './LogManager'
 const logmanager = new LogManager('./src/classes/CommandManager.ts')
+
+/**
+ * Менеджер команд.
+ */
 class CommandManager {
   public commands: Map<string, CommandData>
   public unloadedCommands: Array<UnloadedCommands>
@@ -15,9 +19,14 @@ class CommandManager {
    * @param commandsPath Путь до папки с командами относительно корня проекта.
    */
   constructor (public commandsPath: string) {
-    if (!existsSync(this.commandsPath)) { throw new Error('Указан неправильный путь до папки с командами.') }
+    if (!existsSync(this.commandsPath)) {
+      throw new Error('Указан неправильный путь до папки с командами.')
+    }
 
+    // Проверяем наличие символа "/" на конце пути.
+    // Если его нету - мы его добавляем.
     if (this.commandsPath[this.commandsPath.length] !== '/') this.commandsPath += '/'
+
     this.commands = new Map()
     this.unloadedCommands = []
   }
@@ -42,16 +51,20 @@ class CommandManager {
    */
   public addCommand (path: string) {
     try {
+      // Вызываем файл с командой.
       const Command = require(path)
+
+      // Получаем объект самой команды.
       const command: Command = new Command()
 
-      // Проверить команды на их наличие
+      // Проверяем дубликат.
       const commandCheck = this.commands.has(command.cmd.name)
       if (commandCheck) {
         logmanager.error('COMMANDS', `Kоманда по пути \`${path}\` конфликтует уже с существующей командой \`${command.cmd.name}\`\nКоманда не загружена!`)
         return
       }
 
+      // Записываем команду.
       this.commands.set(command.cmd.name, command.cmd)
     } catch (error) {
       logmanager.error('COMMANDS', `При загрузке команды \`${path}\` произошла ошибка:\n`, error.stack)
@@ -59,28 +72,30 @@ class CommandManager {
     }
   }
 
+  /**
+   * Проходится по файлам и папкам, загружая команды.
+   * @param path { string }
+   */
   private loadCommands (path = this.commandsPath): void {
-    // Файлы и папки.
+    // Получаем файлы и папки.
     const filesAndFolders: string[] = readdirSync(this.commandsPath)
 
-    // Файлы.
+    // Сортируем из общего списка только .js файлы.
     const files = filesAndFolders
       .filter((f) => statSync(this.commandsPath + f).isFile()) // Отсортировать только по файлам.
       .filter((x) => x.endsWith('.js')) // Отсортировать файлы по окончанию .js
 
-    // Папки.
+    // Сортируем из общего списка только папки.
     const folders = filesAndFolders
-      .filter((f) =>
-        statSync(this.commandsPath + f)
-          .isDirectory()
-      ) // Отсортировать только по папкам.
+      .filter((f) => statSync(this.commandsPath + f).isDirectory())
 
     // Проходимся по вложенным папкам.
     for (const folder of folders) {
+      // Заново вызываем эту функцию, чтобы загрузить команды уже с папок.
       this.loadCommands(path + folder + '/')
     }
 
-    // Загрузить команды.
+    // Загружаем команды.
     for (const file of files) {
       const pathRelative = relative('build/src/', path + `${file}`)
       logmanager.log('COMMANDS', `${this.commands.size + 1}. Загрузка ${pathRelative}`)

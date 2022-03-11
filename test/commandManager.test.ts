@@ -36,5 +36,7 @@ describe('CommandManager.ts', function () {
       if (!cmd.name) throw Error('У команды отсутствует название.')
       if (!cmd.run) throw Error('У команды отсутствует функция run')
     })
+    
+    // it('Инициализация команды с существующим именем')
   })
 })
