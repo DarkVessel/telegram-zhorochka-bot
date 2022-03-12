@@ -41,7 +41,10 @@ class CommandManager {
     this.loadCommands()
     logmanager.log('COMMANDS', 'Загрузка завершена!')
     if (this.unloadedCommands.length) {
-      logmanager.warn('COMMANDS', `Не было загружено ${this.unloadedCommands.length} команд.`, this.unloadedCommands.map((d, i) => `${i + 1}. ${d.path} (${d.error})`).join('\n'))
+      logmanager.warn('COMMANDS',
+        `Не было загружено ${this.unloadedCommands.length} команд.`,
+        this.unloadedCommands.map((d, i) => `${i + 1}. ${d.path} (${d.error})`).join('\n')
+      )
     }
   }
 
@@ -60,14 +63,18 @@ class CommandManager {
       // Проверяем дубликат.
       const commandCheck = this.commands.has(command.cmd.name)
       if (commandCheck) {
-        logmanager.error('COMMANDS', `Kоманда по пути \`${path}\` конфликтует уже с существующей командой \`${command.cmd.name}\`\nКоманда не загружена!`)
+        const error = Error(`Kоманда по пути \`${path}\` конфликтует уже с существующей командой \`${command.cmd.name}\``)
+        this.unloadedCommands.push({ path, error })
+        logmanager.error('COMMANDS', `${error.message}\nКоманда не загружена!`)
         return
       }
 
       // Записываем команду.
       this.commands.set(command.cmd.name, command.cmd)
     } catch (error) {
-      logmanager.error('COMMANDS', `При загрузке команды \`${path}\` произошла ошибка:\n`, error.stack)
+      logmanager.error('COMMANDS',
+        `При загрузке команды \`${path}\` произошла ошибка:`,
+        error.stack)
       this.unloadedCommands.push({ path, error })
     }
   }
@@ -78,16 +85,16 @@ class CommandManager {
    */
   private loadCommands (path = this.commandsPath): void {
     // Получаем файлы и папки.
-    const filesAndFolders: string[] = readdirSync(this.commandsPath)
+    const filesAndFolders: string[] = readdirSync(path)
 
     // Сортируем из общего списка только .js файлы.
     const files = filesAndFolders
-      .filter((f) => statSync(this.commandsPath + f).isFile()) // Отсортировать только по файлам.
+      .filter((f) => statSync(path + f).isFile()) // Отсортировать только по файлам.
       .filter((x) => x.endsWith('.js')) // Отсортировать файлы по окончанию .js
 
     // Сортируем из общего списка только папки.
     const folders = filesAndFolders
-      .filter((f) => statSync(this.commandsPath + f).isDirectory())
+      .filter((f) => statSync(path + f).isDirectory())
 
     // Проходимся по вложенным папкам.
     for (const folder of folders) {

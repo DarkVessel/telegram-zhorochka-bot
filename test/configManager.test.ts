@@ -2,6 +2,7 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import ConfigManager from '../src/classes/ConfigManager'
 import configSchema from '../src/configSchema'
 
+process.env.MOCHA_WORKING = 'true'
 function initializeTheConfigManager () {
   const fileName = `test_file_${Math.random()}.json`
   const configManager = new ConfigManager(fileName)
@@ -43,6 +44,18 @@ ${JSONstr}`)
       }
       rmSync(fileName)
     })
+
+    it('Перезапись отсутствующего файла', function () {
+      const configManager = new ConfigManager(`test_file_${Math.random()}.json`)
+
+      process.env.MOCHA_WORKING = undefined
+      configManager.overwrite()
+      process.env.MOCHA_WORKING = 'true'
+
+      if (!existsSync(configManager.path)) {
+        throw Error('Новый файл конфигурации не создался.')
+      } else rmSync(configManager.path)
+    })
   })
 
   describe('#reread', function () {
@@ -54,6 +67,16 @@ ${JSONstr}`)
 
       // @ts-ignore
       if (ConfigManager.data.test_key !== 999) throw Error('Файл не перечитался.')
+    })
+
+    it('Перечитать отсутствующий файл', function () {
+      const fileName = `test_file_${Math.random()}.json`
+      const configManager = new ConfigManager(fileName)
+
+      configManager.reread()
+      if (!existsSync(configManager.path)) {
+        throw Error('Новый файл конфигурации не создался.')
+      } else rmSync(configManager.path)
     })
   })
 
@@ -83,8 +106,10 @@ ${JSONstr}`)
       ConfigManager.data = {}
 
       const keys = Object.keys(configSchema).filter(k => configSchema[k].default !== undefined)
-      if (!keys.length) return console.warn('[WARN]: В configSchema нет дефолтных значений, проверка отменяется.')
-
+      if (!keys.length) {
+        console.warn('[WARN]: В configSchema нет дефолтных значений, проверка отменяется.')
+        return
+      }
       configManager.rereadSchema()
       const fileContent = readFileSync(fileName).toString()
       rmSync(fileName)

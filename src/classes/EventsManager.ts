@@ -37,7 +37,9 @@ class EventsManager {
     this.loadEvents()
     logmanager.log('EVENTS', 'Загрузка завершена!')
     if (this.unloadedEvents.length) {
-      logmanager.warn('EVENTS', `Не было загружено ${this.unloadedEvents.length} команд.`, this.unloadedEvents.map((d, i) => `${i + 1}. ${d.path} (${d.error})`).join('\n'))
+      logmanager.warn('EVENTS',
+        `Не было загружено ${this.unloadedEvents.length} команд.`,
+        this.unloadedEvents.map((d, i) => `${i + 1}. ${d.path} (${d.error})`).join('\n'))
     }
   }
 

@@ -46,6 +46,8 @@ class LogManager {
    * @returns { returnMethods }
    */
   private _send (typeConsole: 'log' | 'error' | 'warn', typeLog: string, title: string, blocks?: Array<string>): returnMethods {
+    if (process.env.MOCHA_WORKING) return
+
     // Получаем время в формате "Hours:Min:Sec"
     const time = strftime('%H:%M:%S', new Date())
 
@@ -91,7 +93,10 @@ class LogManager {
     }
 
     // Отправка сообщения в чат.
-    const sendMessage = LogManager.telegramClient.telegram.sendMessage(ConfigManager.data.logChannel, `>> *${this.path}*\n[[ ${typeLog.toUpperCase()} ]] >> ${title}\n${formatBlocks ?? ''}`, { parse_mode: 'Markdown' })
+    const sendMessage = LogManager.telegramClient.telegram
+      .sendMessage(ConfigManager.data.logChannel,
+        `>> *${this.path}*\n[[ ${typeLog.toUpperCase()} ]] >> ${title}\n${formatBlocks ?? ''}`,
+        { parse_mode: 'Markdown' })
 
     sendMessage.catch((err) => {
       console.error('[ERROR] Произошла ошибка при попытке отправить сообщение.\n' + err.stack)

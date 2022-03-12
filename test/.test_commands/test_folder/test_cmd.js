@@ -1,9 +1,9 @@
-const { default: Command } = require("../../src/handlers/Command");
+const { default: Command } = require("../../../src/handlers/Command");
 
 class Test extends Command {
   constructor () {
     super({
-      name: 'test',
+      name: 'test2',
       run () {}
     })
   }

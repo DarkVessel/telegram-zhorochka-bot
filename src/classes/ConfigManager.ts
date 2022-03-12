@@ -41,6 +41,7 @@ class ConfigManager {
         JSON.stringify(ConfigManager.data, null, 4)
       )
     } catch (err) {
+      if (process.env.MOCHA_WORKING) return
       console.error(
         '[CONFIG_MANAGER]',
         'Произошла ошибка при попытке записать данные в "' + this.path + '"\n',
@@ -61,11 +62,11 @@ class ConfigManager {
       // Присваиваем новое значение для data.
       ConfigManager.data = JSON.parse(data.toString())
     } catch (error) {
-      console.error(
-        '[CONFIG_MANAGER]',
-        `Произошла ошибка при попытке прочитать "${this.path}"\nСброс конфига!\n`,
-        error.stack
-      )
+      if (!process.env.MOCHA_WORKING) {
+        console.error('[CONFIG_MANAGER]',
+          `Произошла ошибка при попытке прочитать "${this.path}"\nСброс конфига!`,
+          error.stack)
+      }
       this.reset()
     }
     return ConfigManager.data
