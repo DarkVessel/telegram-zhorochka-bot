@@ -1,26 +1,9 @@
-import ConfigManager from '../classes/ConfigManager'
 import Command from '../handlers/Command'
 class Rules extends Command {
   constructor () {
     super({
       name: 'rules',
       run (ctx) {
-        if (!ConfigManager.data.rules_fromChatId) {
-          return ctx.reply(
-            'Отсутствует rules_fromChatId в config.json. Обратитесь к Администраторам.'
-          )
-        }
-        if (!ConfigManager.data.rules_messageId) {
-          return ctx.reply(
-            'Отсутствует rules_messageId в config.json. Обратитесь к Администраторам.'
-          )
-        }
-        if (ctx.chat?.id === undefined) {
-          return ctx.reply(
-            'Не найден chat.id этого чата. Повторите попытку позже.'
-          )
-        }
-
         ctx.reply('Ознакомиться с правилами можно [здесь](https://t.me/crazy_linux/249).', { parse_mode: 'Markdown' })
         // bot.telegram
         //   .copyMessage(ctx.chat.id, ConfigManager.data.rules_fromChatId, ConfigManager.data.rules_messageId)

@@ -10,7 +10,7 @@
   "scripts": {
     "start"    : "node build/index.js",
     "settings" : "node scripts/settings.js",
-    "init"     : "sh scripts/initialization.sh",
+    "init"     : "bash scripts/initialization.sh",
     "test"     : "mocha --require ts-node/register test/*.test.ts",
     "pm2_start": "pm2 start build/index.js -n telegram-zhorochka"
   },

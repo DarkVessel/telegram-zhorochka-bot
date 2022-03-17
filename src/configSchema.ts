@@ -21,20 +21,6 @@ const schema: ConfigSchema = {
     mutable: true,
     show: true
   },
-  rules_fromChatId: {
-    type: 'number',
-    default: undefined,
-    description: 'ID чата, в котором находятся правила.',
-    mutable: true,
-    show: true
-  },
-  rules_messageId: {
-    type: 'number',
-    default: undefined,
-    description: 'ID сообщения, в котором прописаны правила.',
-    mutable: true,
-    show: true
-  },
   bot_owner: {
     type: 'number',
     default: undefined,
