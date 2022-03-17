@@ -61,7 +61,7 @@ class WarnCommand extends Command {
             },
             until_date: Math.floor(Date.now() / 1000) + (warnsLength === 3 ? (60 * 60) : (60 * 60 * 24))
           }).then(() => {
-            ctx.reply(`*Пользователь @${message.from.username} больше не может писать в чат.*`, { parse_mode: 'Markdown' })
+            ctx.reply(`*Пользователь @${message.from.username} больше не сможет писать в чат один ${warnsLength === 3 ? 'час' : 'день.'}.*`, { parse_mode: 'Markdown' })
           }).catch(console.error)
         } else if (warnsLength >= 10) {
           ctx.banChatMember(message.from.id).then(() => {
