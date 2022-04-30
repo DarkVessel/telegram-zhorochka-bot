@@ -1,3 +1,5 @@
+import { DataTypes } from "sequelize/types";
+
 type ValidScalars = null | string | boolean | number;
 type JSONType = ValidScalars | ValidScalars[] | { [key: string]: ValidScalars | JSONType } | JSONType[];
 
@@ -6,7 +8,11 @@ type JSONType = ValidScalars | ValidScalars[] | { [key: string]: ValidScalars | 
  */
 interface ConfigSchema {
   [key: string]: {
-    type: "string" | "number" | "boolean" | "array" | "object";
+    type: 'string' | 'number' | 'boolean' | 'array' | 'object';
+    /**
+     * Сюда передаётся DataTypes.TYPE
+     */
+    typeDB: typeof DataTypes[keyof typeof DataTypes];
     default: JSONType | undefined;
     description?: string;
     mutable: boolean;
@@ -20,4 +26,4 @@ interface ConfigSchema {
   };
 }
 
-export = ConfigSchema;
+export default ConfigSchema;

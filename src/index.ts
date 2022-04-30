@@ -1,11 +1,9 @@
-console.log("[PROJECT] Start!");
+// Вывод в консоль.
+console.log('[PROJECT] Start!')
 
-require('dotenv').config();
+// Вызывается модуль dotenv, который сканирует .env файл.
+// Значения записываются в process.env
+require('dotenv').config()
 
-if (!process.env.BOT_TOKEN)
-    throw new Error('Отсутствует значение "BOT_TOKEN" в .env файле.');
-
-// if (!process.env.MONGODB_URL)
-//     throw new Error('Отсутствует значение "MONGODB_URL" в .env Файле.');
-
-require('./telegramClient');
+// Вызов файла telegramClient.ts
+require('./telegramClient')

@@ -1,33 +1,33 @@
-// import { connect } from "mongoose";
+// Инициализируем класс LogManager.
+// Он отвечает за красивое оформление текста в консоли, а также отправку ошибок в группу Телеграмма.
+import ConfigManager from './classes/ConfigManager'
+import LogManager from './classes/LogManager'
 
-// const client = 0
+// Класс клиента, в нём хранится всё самое нужное.
+import TelegramClient from './classes/TelegramClient'
 
-// connect(<string>process.env.MONGODB_URL).then(() => {
-//     client.start);
-// }).catch(err => {
-//     console.error('Произошла ошибка при подключении к MongoDB базе.');
-//     throw err;
-// });
+// Создаём экземпляр Телеграмм Клиента и передаём ему токен.
+const bot = new TelegramClient(<string>process.env.BOT_TOKEN)
 
-import ConfigManager from "./classes/ConfigManager";
-import LogManager from "./classes/LogManager";
-import TelegramClient from "./classes/TelegramClient";
+const configManager = new ConfigManager()
+configManager.start().then(async () => {
+  await bot.launch()
+  // Этот блок кода выполняется после того, как бот вышел в сеть.
 
-const bot = new TelegramClient(process.env.BOT_TOKEN);
-new ConfigManager();
-bot.launch().then(() => {
-    const logmanager = new LogManager("./src/telegramClient.ts");
-    logmanager.log("CLIENT", "Login!");
+  // Сообщаем LogManager'y о том, что бот залогинился и передаём ему экземпляр.
+  LogManager.telegramClient = bot
+  LogManager.config = ConfigManager.data
 
-    bot.loadEvents();
-    bot.loadCommands();
+  // Создаём экземпляр LogManager'a
+  const logmanager = new LogManager('./src/telegramClient.ts')
+  logmanager.log('CLIENT', 'Login!')
+
+  // Вызываем в боте функцию старта обработчиков.
+  // Проверьте classes/TelegramClient.ts чтобы понять, о чём я.
+  bot.startHandlers()
 }).catch(err => {
-    throw err;
+  console.error('>>> Произошла ошибка при попытке бота залогиниться!')
+  throw err
 })
-// bot.start((ctx) => ctx.reply('Welcome'))
-// bot.help((ctx) => ctx.reply('Send me a sticker'))
-// bot.on('message', console.log);
-// bot.hears('hi', (ctx) => ctx.reply('Hey there'))
 
-
-export default bot;
+export default bot

@@ -11,9 +11,26 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/build/index.js",
+            "program": "${workspaceFolder}/build/src/index.js",
             "outFiles": [
-                "${workspaceFolder}/build/*.js.map"
+                "${workspaceFolder}/build/src/*.js.map",
+                "${workspaceFolder}/build/src/**/*.js.map",
+                "${workspaceFolder}/build/src/**/**/*.js.map"
+            ],
+            "runtimeVersion": "16.14.0",
+        },
+        {
+            "type": "pwa-node",
+            "request": "launch",
+            "name": "Test Program",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/build/test.js",
+            "outFiles": [
+                "${workspaceFolder}/build/*.js.map",
+                "${workspaceFolder}/build/**/*.js.map",
+                "${workspaceFolder}/build/**/**/*.js.map"
             ],
             "runtimeVersion": "16.14.0",
         }

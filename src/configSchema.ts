@@ -1,40 +1,58 @@
-import { Telegram } from "telegraf";
-import ConfigSchema from "./interfaces/ConfigSchema";
+import { DataTypes } from 'sequelize'
+import { Telegram } from 'telegraf'
+import ConfigSchema from './interfaces/ConfigSchema'
 
 const schema: ConfigSchema = {
-    logChannel: {
-        type: "number",
-        default: undefined,
-        description: "ID группы, куда будут скидываться логи.",
-        mutable: true,
-        show: true,
-        check: (data: string|number, telegram: Telegram) => new Promise(resolve => {
-            telegram.getChat(data)
-                .then(() => resolve())
-                .catch(() => resolve("Не найден чат."));
-        })
-    },
-    sendLogsToAGroup: {
-        type: "boolean",
-        default: false,
-        description: "Отправлять логи в группу.",
-        mutable: true,
-        show: true,
-    },
-    rules_fromChatId: {
-        type: "number",
-        default: undefined,
-        description: "ID чата, в котором находятся правила.",
-        mutable: true,
-        show: true
-    },
-    rules_messageId: {
-        type: "number",
-        default: undefined,
-        description: "ID сообщения, в котором прописаны правила.",
-        mutable: true,
-        show: true
-    }
+  logChat: {
+    type: 'number',
+    typeDB: DataTypes.BIGINT,
+    default: undefined,
+    description: 'ID группы, куда будут скидываться логи и ошибки.',
+    mutable: true,
+    show: true,
+    check: (data: string|number, telegram: Telegram) => new Promise(resolve => {
+      telegram.getChat(data)
+        .then(() => resolve())
+        .catch(() => resolve('Не найден чат.'))
+    })
+  },
+  adminChat: {
+    type: 'number',
+    typeDB: DataTypes.BIGINT,
+    default: undefined,
+    description: 'ID группы, где сидят Администраторы вашего проекта. Туда будет скидываться важная информация.',
+    mutable: true,
+    show: true,
+    check: (data: string|number, telegram: Telegram) => new Promise(resolve => {
+      telegram.getChat(data)
+        .then(() => resolve())
+        .catch(() => resolve('Не найден чат.'))
+    })
+  },
+  sendLogsToAGroup: {
+    type: 'boolean',
+    typeDB: DataTypes.BOOLEAN,
+    default: false,
+    description: 'Отправлять логи в группу?',
+    mutable: true,
+    show: true
+  },
+  bot_owner: {
+    type: 'number',
+    typeDB: DataTypes.BIGINT,
+    default: undefined,
+    description: 'ID аккаунта создателя бота.',
+    mutable: false,
+    show: true
+  },
+  urlToRules: {
+    type: 'string',
+    typeDB: DataTypes.STRING,
+    default: undefined,
+    description: 'URL-ссылка на правила вашего чата.',
+    mutable: true,
+    show: true
+  }
 }
 
-export default schema                                                                                    
+export default schema
