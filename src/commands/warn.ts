@@ -1,86 +1,105 @@
-import { existsSync, writeFileSync } from 'fs'
-import ConfigManager from '../classes/ConfigManager'
+import DialogManager from '../classes/DialogManager'
 import Command from '../handlers/Command'
-import bot from '../telegramClient'
+import WarnManager from '../classes/WarnManager'
+import LogManager from '../classes/LogManager'
+import generateHTMLUserHyperlink from '../utils/generateHTMLUserHyperlink'
+import getRandomElement from '../utils/getRandomElement'
+import confirmationToWarn from '../content/cmd_warn/confirmation_to_warn'
+import { Context, Markup } from 'telegraf'
+import adaptTextToHTML from '../utils/adaptTextToHTML'
 
-if (!existsSync('./src/warns.json')) writeFileSync('./src/warns.json', '{}')
-const warns = require('../../src/warns.json')
+import addWarn from '../handlers/cmd/addWarn'
+import Extra from '../interfaces/CMD_ExtraAddWarn'
+import { Update } from 'telegraf/typings/core/types/typegram'
+
+interface RunningKeyboard {
+  userId: number,
+  ctxIntruder: Context<Update>,
+  ctxModer: Context<Update>,
+  reason: string,
+  timeout: any,
+  extra: Extra
+}
+const logManager = new LogManager('./src/commands/warn.ts')
 class WarnCommand extends Command {
+  static runningKeyboards: Map<number, RunningKeyboard> = new Map()
   constructor () {
     super({
+      allowUseInDM: false,
+      checkMeAdmin: true,
+      checkOwner: false,
+      checkAdmin: true,
       name: 'warn',
-      async run (ctx) {
-        // 1.1. Проверка на наличие chat_id в config.json.
-        if (!ConfigManager.data.chat_id) {
-          return ctx.reply('К сожалению, команды модерации не могут работать из-за отсутствия ключа `chat_id` в `config.json`',
-            { parse_mode: 'Markdown' })
-        }
-
-        // 1.2. Проверка на то, что команда выполняется на нужном сервере.
-        if (ConfigManager.data.chat_id !== ctx.message?.chat.id) { return ctx.reply('В этой группе нельзя использовать команды модерации.') }
-
-        // 2. Проверка на присутствие прав у бота..
+      async run (ctx, args) {
         const chatAdministrators = await ctx.getChatAdministrators()
-        if (!chatAdministrators.find(c => c.user.id === bot.botInfo?.id)) { return ctx.reply('Я не нашёл себя в списках Администратора. Эй!? Что за измена?!') }
 
-        // 3. Проверка на то, что юзер является админом.
-        if (!chatAdministrators.find(c => c.user.id === ctx.message?.from.id)) { return ctx.reply('Ой, ты не админ...извини, я не могу позволить тебе использовать эту команду.') }
-
-        // 4. Находим id пользователя, которого нужно замутить..
         // @ts-ignore
         const message = ctx.update.message.reply_to_message
-        if (!message) return ctx.reply('Эй, а кому давать варн? Ответь на сообщение нарушителя.')
-
-        // 5. Проверка на самовыпилевание или на указание на бота.
-        if (message.from.id === bot.botInfo?.id) { return ctx.reply('Что? Меня за что?') }
-
-        if (message.from.id === ctx.message.from.id) { return ctx.reply('Самокритично, однако. Но я не позволю.') }
-
-        // 6. Проверка на то, чтобы юзером не был Админ.
+        if (!message) return DialogManager.warnNoUserSpecified(ctx)
+        if (message.from.id === ctx.botInfo?.id) return DialogManager.warnIndicationOfABot(ctx)
+        if (message.from.id === ctx.message?.from.id) return DialogManager.warnSelfWarning(ctx)
         const userAdmin = chatAdministrators.find(c => c.user.id === message.from.id)
-        if (userAdmin && chatAdministrators.find((c) => c.status === 'creator')?.user.id !== ctx.message.from.id) { return ctx.reply('Только глава может давать варны Администраторам!') }
-
-        if (!warns[message.from.id]) warns[message.from.id] = []
-        warns[message.from.id].push({
-          moderator: ctx.message?.from.id,
-          date: Date.now(),
-          message_id: message.message_id
-        })
-
-        writeFileSync('./src/warns.json', JSON.stringify(warns, null, 4))
-
-        ctx.reply(`*Пользователю @${message.from.username} было выдано ${warns[message.from.id].length} предупреждение.*`, { parse_mode: 'Markdown' })
-
-        if (userAdmin) return
-        const warnsLength = warns[message.from.id].length
-        if (warnsLength === 3 || warnsLength === 6) {
-          ctx.restrictChatMember(message.from.id, {
-            permissions: {
-              can_send_messages: false,
-              can_change_info: false
-            },
-            until_date: Math.floor(Date.now() / 1000) + (warnsLength === 3 ? (60 * 60) : (60 * 60 * 24))
-          }).then(() => {
-            ctx.reply(`*Пользователь @${message.from.username} больше не сможет писать в чат один ${warnsLength === 3 ? 'час' : 'день.'}.*`, { parse_mode: 'Markdown' })
-          }).catch(console.error)
-        } else if (warnsLength >= 10) {
-          ctx.banChatMember(message.from.id).then(() => {
-            ctx.reply(`*Пользователь @${message.from.username} был забанен...навсегда.*`, { parse_mode: 'Markdown' })
-          }).catch(console.error)
+        if (userAdmin && chatAdministrators.find((c) => c.status === 'creator')?.user.id !== ctx.message?.from.id) {
+          return DialogManager.warnAddToAdmin(ctx)
         }
 
-        // const args: Array<string> = ctx.message.text
-        //   .slice(6) // Вырезаем /warn
-        //   .trim() // Удаляем пробелы по бокам.
-        //   .split(" "); // Разделяем.
+        const moderatorHyperlink = generateHTMLUserHyperlink({
+          username: ctx.from?.username,
+          userId: ctx.from?.id,
+          firstName: ctx.from?.first_name,
+          lastName: ctx.from?.last_name
+        })
+        if (!args.length) {
+          ctx.deleteMessage(ctx.message?.message_id)
+          ctx.telegram.sendMessage(<number>ctx.from?.id, 'Нельзя давать предупреждения без указания причины!!!').catch((err) => {
+            ctx.reply(`${moderatorHyperlink}, нельзя давать предупреждения без причины.`, { parse_mode: 'HTML' })
+              .then(msg => {
+                setTimeout(() => {
+                  ctx.deleteMessage(msg.message_id)
+                }, 7500)
+              })
+            logManager.warn('COMMAND_WARN', 'Не удалось отправить сообщение в ЛС.', err.stack)
+          })
+          return
+        }
 
-        // // Если указан первый аргумент.
-        // if (args[0]) {
-        //   const username = args[0].slice(args[0][0] === "@" ? 1 : 0);
+        const microlog = DialogManager.microlog(ctx, 1000, 'Подождите, проверяю личные дела этого господина...')
+        const warns = await WarnManager.fetchUser(message.from.id, <number>ctx.chat?.id)
+        microlog.stop()
+        const warn = warns.find(w => w.getDataValue('offenderMessageId') === message.message_id)
+        if (warn) {
+          const moderatorFullName = warn.getDataValue('moderatorFullName')
+          const text = ctx.from?.id === warn.getDataValue('moderatorId')
+            ? 'Вы уже выдали этому пользователю предупреждение. Хотите выдать ещё раз?'
+            : `Этот пользователь уже получал предупреждение от модератора${moderatorFullName ? ` (<code>${adaptTextToHTML(moderatorFullName)}</code>)` : ''}. Хотите выдать ещё одно?`
 
-        // }
+          const answers = getRandomElement(confirmationToWarn)
+          const msg = await ctx.reply(text, {
+            parse_mode: 'HTML',
+            reply_to_message_id: ctx.message?.message_id,
+            ...Markup.keyboard(answers).resize().oneTime().selective()
+          })
+          WarnCommand.runningKeyboards.set(msg.message_id, {
+            userId: <number>ctx.from?.id,
+            ctxIntruder: message,
+            ctxModer: ctx,
+            reason: args.join(' '),
+            timeout: setTimeout(() => {
+              WarnCommand.runningKeyboards.delete(msg.message_id)
+              ctx.deleteMessage(ctx.message?.message_id)
+              ctx.deleteMessage(msg.message_id)
+            }, 20000),
+            extra: { userAdmin, moderatorHyperlink, warnsLength: warns.length + 1 }
+          })
+          return
+        }
+
+        ctx.deleteMessage(ctx.message?.message_id)
+        addWarn(args.join(' '), message, ctx, {
+          userAdmin, moderatorHyperlink
+        })
       }
     })
   }
 }
-export = WarnCommand;
+export default WarnCommand

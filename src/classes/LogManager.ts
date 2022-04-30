@@ -2,7 +2,7 @@ import { Message } from 'telegraf/typings/core/types/typegram'
 import { timezone } from 'strftime'
 
 import TelegramClient from './TelegramClient'
-import ConfigManager from './ConfigManager'
+import ConfigJSON from '../interfaces/ConfigKeys'
 const strftime = timezone(180) // 180 - это московская таймзона.
 
 const colors = {
@@ -11,7 +11,7 @@ const colors = {
 }
 
 // Какой тип возвращают все функции из класса LogManager'a?
-type returnMethods = void | Promise<Message.TextMessage>;
+type returnMethods = Promise<Message.TextMessage | void>;
 
 // Это просто разделитель текстовый.
 const strip: string = '-'.repeat(50)
@@ -30,6 +30,8 @@ class LogManager {
   // Телеграм клиент.
   static telegramClient: TelegramClient
 
+  static config: ConfigJSON = {}
+
   /**
    * @param path - Путь, который будет показываться при выводе лога.
    */
@@ -45,8 +47,8 @@ class LogManager {
    * @param blocks - Дополнительные блоки сообщений.
    * @returns { returnMethods }
    */
-  private _send (typeConsole: 'log' | 'error' | 'warn', typeLog: string, title: string, blocks?: Array<string>): returnMethods {
-    if (process.env.MOCHA_WORKING) return
+  private async _send (typeConsole: 'log' | 'error' | 'warn', typeLog: string, title: string, blocks?: Array<string>): returnMethods {
+    if (process.env.DISABLE_LOGGING) return
 
     // Получаем время в формате "Hours:Min:Sec"
     const time = strftime('%H:%M:%S', new Date())
@@ -81,8 +83,8 @@ class LogManager {
     // 2. Если параметр sendLogsToAGroup в конфиге стоит в значении false
     // 3. Если не установлен параметр logChannel в конфиге.
     if (!['error', 'warn'].includes(typeConsole) ||
-      !ConfigManager.data.sendLogsToAGroup ||
-      !ConfigManager.data.logChannel) return
+      !LogManager.config.sendLogsToAGroup ||
+      !LogManager.config.logChat) return
 
     // Форматируем дополнительные блоки для сообщений.
     let formatBlocks: string = ''
@@ -94,7 +96,7 @@ class LogManager {
 
     // Отправка сообщения в чат.
     const sendMessage = LogManager.telegramClient.telegram
-      .sendMessage(ConfigManager.data.logChannel,
+      .sendMessage(LogManager.config.logChat,
         `>> *${this.path}*\n[[ ${typeLog.toUpperCase()} ]] >> ${title}\n${formatBlocks ?? ''}`,
         { parse_mode: 'Markdown' })
 

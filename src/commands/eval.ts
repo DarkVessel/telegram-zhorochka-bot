@@ -1,42 +1,50 @@
-import ConfigManager from '../classes/ConfigManager'
 import Command from '../handlers/Command'
+import { Markup } from 'telegraf'
 import { inspect } from 'util'
-
-class Eval extends Command {
+class EvalCommand extends Command {
+  public static initTime = Date.now() + 1500
+  public static promises: Map<number, Promise<any>> = new Map()
   constructor () {
     super({
       name: 'eval',
-      async run (ctx) {
-        if (!ConfigManager.data.bot_owner) return ctx.reply('Неа.')
-        if (ConfigManager.data.bot_owner !== ctx.message?.from?.id) { return ctx.reply('Неа, ты не создатель бота.') }
-
+      checkMeAdmin: false,
+      checkAdmin: false,
+      checkOwner: true,
+      allowUseInDM: true,
+      async run (ctx, args) {
+        if (Date.now() <= EvalCommand.initTime) return
         try {
-          // @ts-ignore
           // eslint-disable-next-line no-eval
-          const evaled = eval(ctx.message.text.slice(5))
-          const formatEvaled = inspect(evaled, { depth: 0, maxArrayLength: 50 })
+          const evaled = eval(args.join(' '))
+          const formatEvaled = inspect(evaled, { depth: 2, maxArrayLength: 20 })
             .replace(<string>process.env.BOT_TOKEN, 'Не в этот раз.')
 
-          // let button: any;
-          // if (evaled instanceof Promise) {
-          //   button = Markup.keyboard([Markup.button.callback('Открыть Промиз?', 'open_promise')]).oneTime().resize();
-          // }
+          if (formatEvaled.length > 4096) return ctx.reply(`Слишком длинное сообщение, ${formatEvaled.length} символов.`)
 
-          await ctx.reply('```\n' + formatEvaled + '\n```', { parse_mode: 'Markdown' })
-          // bot.hears("Открыть Промиз?", async(ctx) => {
-          //     const openPromise = await evaled;
-          //     const formatEvaled = inspect(openPromise, { depth: 0, maxArrayLength: 50 })
-          //       .replace(<string>process.env.BOT_TOKEN, "Не в этот раз.");
+          let button
+          if (evaled instanceof Promise) {
+            button = Markup.inlineKeyboard([Markup.button.callback('Open promise', 'open_promise')])
+          }
 
-          //     //bot.telegram.editMessageText(message.from?.id, "вввв", { parse_mode: "Markdown" })
-          //     //.catch(console.error)
-          //   })
+          const msg = await ctx.reply('```\n' + formatEvaled + '\n```', {
+            parse_mode: 'Markdown',
+            reply_to_message_id: ctx.message?.message_id,
+            allow_sending_without_reply: true,
+            ...button
+          })
+
+          if (evaled instanceof Promise) {
+            EvalCommand.promises.set(msg.message_id, evaled)
+          }
         } catch (error) {
-          ctx.reply('```\n' + error.stack + '\n```', { parse_mode: 'Markdown' })
-            .catch(console.error)
+          ctx.reply('```\n' + error.message + '\n```', {
+            parse_mode: 'Markdown',
+            reply_to_message_id: ctx.message?.message_id,
+            allow_sending_without_reply: true
+          }).catch(console.error)
         }
       }
     })
   }
 }
-export = Eval;
+export default EvalCommand

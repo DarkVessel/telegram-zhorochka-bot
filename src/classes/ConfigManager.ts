@@ -1,72 +1,73 @@
-// Экспортируем функции из fs.
-import { existsSync, readFileSync, writeFileSync } from 'fs'
-
 // В конфиг-схеме хранятся данные о том, как должен быть устроен конфиг.
+import { Model } from 'sequelize/types'
 import configSchema from '../configSchema'
 
 // Копия configSchema, но она отображает только как будет выглядить сам config.json
-import ConfigJSON from '../interfaces/ConfigJSON'
+import ConfigJSON from '../interfaces/ConfigKeys'
+import Configuration from '../models/Configuration'
 
+type modelType = Model<any, any>
 class ConfigManager {
   // Данный элемент статистический, это означает что к нему можно обращаться напрямую, без инициализации класса.
   // В data хранится конфиг из config.json
   static data: ConfigJSON = {}
 
-  // Конструктор вызывается при инициализации класса.
-  constructor (public path: string) {
-    this.path = path // Указываем менеджеру, что конфиг находится по такому-то пути.
+  // Хранит активную модель конфигурации.
+  static model: modelType | null = null
+
+  public async start () {
+    return this.fetch()
   }
 
-  public start () {
-    // Проверяет наличие конфиг-файла.
-    if (!existsSync(this.path)) {
-      // Если конфиг-файл не существует, мы создаём его с содержимым "{}"
-      writeFileSync(this.path, '{}')
+  public async getModel (again?: boolean): Promise<modelType> {
+    if (!ConfigManager.model || again) {
+      ConfigManager.model = await Configuration.findOne()
+      if (!ConfigManager.model) {
+        ConfigManager.model = await Configuration.create()
+      }
     }
 
-    // Вызываем функции reread, rereadSchema
-    this.reread()
-    this.rereadSchema()
+    return <modelType>ConfigManager.model
   }
 
   /**
-   * Перезаписать файл конфига.
+   * Перезаписать конфиг.
    * @returns { void }
    */
-  public overwrite (): void {
+  public async save (): Promise<void> {
     try {
-      // Записываем файл.
-      writeFileSync(
-        this.path,
-        JSON.stringify(ConfigManager.data, null, 4)
-      )
+      const model = await this.getModel()
+
+      this._removeRedundantElements()
+      await Configuration.upsert({
+        id: model.getDataValue('id'),
+        ...ConfigManager.data
+      })
     } catch (err) {
-      if (process.env.MOCHA_WORKING) return
       console.error(
         '[CONFIG_MANAGER]',
-        'Произошла ошибка при попытке записать данные в "' + this.path + '"\n',
+        'Произошла ошибка при попытке записать данные в MySQL',
         err.stack
       )
     }
   }
 
   /**
-   * Перечитать файл конфига.
+   * Перечитать конфиг.
    * @returns { ConfigJSON }
    */
-  public reread (): ConfigJSON {
+  public async fetch (): Promise<ConfigJSON> {
     try {
-      // Читаем файл.
-      const data = readFileSync(this.path)
+      const model = await this.getModel(true)
 
       // Присваиваем новое значение для data.
-      ConfigManager.data = JSON.parse(data.toString())
+      // @ts-ignore
+      ConfigManager.data = Object.assign({}, model.dataValues)
+      this._removeRedundantElements()
     } catch (error) {
-      if (!process.env.MOCHA_WORKING) {
-        console.error('[CONFIG_MANAGER]',
-          `Произошла ошибка при попытке прочитать "${this.path}"\nСброс конфига!`,
-          error.stack)
-      }
+      console.error('[CONFIG_MANAGER]',
+        'Произошла ошибка при попытке получить Configuration из MySQL.',
+        error.stack)
       this.reset()
     }
     return ConfigManager.data
@@ -78,6 +79,7 @@ class ConfigManager {
    */
   public returnDefaultConfig (): ConfigJSON {
     const config = {}
+
     // Проходимся по схеме конфига.
     for (const key in configSchema) {
       if (!Object.prototype.hasOwnProperty.call(configSchema, key)) continue
@@ -91,43 +93,21 @@ class ConfigManager {
   /**
    * Перезаписывает файл конфига по дефолту.
    */
-  public reset (): void {
+  public reset (): Promise<void> {
     // Присваиваем значению data дефолтный конфиг.
-    ConfigManager.data = this.returnDefaultConfig()
-    return this.overwrite() // Перезаписываем файл.
+    const data = this.returnDefaultConfig()
+
+    for (const key in data) {
+      ConfigManager.data[key] = data[key]
+    }
+
+    return this.save() // Перезаписываем файл.
   }
 
-  /**
-   * Перечитать схему и дополнить `config.json`
-   * @returns { Promise<void> }
-   */
-  public rereadSchema (): void | Promise<void> {
-    const data = {}
-    // Читаем ключи со схемы.
-    for (const key in configSchema) {
-      // Проверяем, есть ли в конфиге этот ключ.
-      if (ConfigManager.data[key]) {
-        data[key] = ConfigManager.data[key]
-      } else if (configSchema[key].default !== undefined) {
-        // Если нет - добавляем новое значение, дефолтное.
-        data[key] = configSchema[key].default
-      }
-    }
-
-    // Проверка двух объектов, если объекты равны - перезапись не делается.
-    const dataKeys = Object.keys(data)
-    const dataKeys2 = Object.keys(ConfigManager.data)
-
-    if (dataKeys.length === dataKeys2.length) {
-      dataKeys.sort()
-      dataKeys2.sort()
-
-      if (dataKeys.join(',') === dataKeys2.join(',')) return
-    }
-
-    // Переписываем конфиг.
-    ConfigManager.data = data
-    return this.overwrite()
+  private _removeRedundantElements () {
+    delete ConfigManager.data.id
+    delete ConfigManager.data.createdAt
+    delete ConfigManager.data.updatedAt
   }
 }
 

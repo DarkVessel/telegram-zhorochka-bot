@@ -1,28 +1,25 @@
+import ConfigManager from '../classes/ConfigManager'
+import DialogManager from '../classes/DialogManager'
+import LogManager from '../classes/LogManager'
 import Command from '../handlers/Command'
-class Rules extends Command {
+
+const logManager = new LogManager('./src/commands/rules.ts')
+class RulesCommand extends Command {
   constructor () {
     super({
+      allowUseInDM: true,
+      checkMeAdmin: false,
+      checkAdmin: false,
+      checkOwner: false,
       name: 'rules',
       run (ctx) {
-        ctx.reply('Ознакомиться с правилами можно [здесь](https://t.me/crazy_linux/249).', { parse_mode: 'Markdown' })
-        // bot.telegram
-        //   .copyMessage(ctx.chat.id, ConfigManager.data.rules_fromChatId, ConfigManager.data.rules_messageId)
-        //   .catch((err) => {
-        //     ctx
-        //       .reply(
-        //         "Не удалось отправить правила. Ошибка уже отправлена Администраторам."
-        //       )
-        //       .catch(console.error);
-
-        //    logmanager.error(
-        //       "COMMANDS",
-        //       "В команде /rules произошла ошибка при попытке скопировать сообщение.",
-        //       err.stack,
-        //       [`chatId: ${ctx.chat?.id}\nfromChatId: ${ConfigManager.data.rules_fromChatId}\nmessageId: ${ConfigManager.data.rules_messageId}`]
-        //     );
-        //   });
+        if (!ConfigManager.data.urlToRules) {
+          logManager.warn('COMMAND_RULES', 'Команда не может функционировать, из-за отсутствующего ключа "urlToRules" в базе данных!')
+          return DialogManager.notRules(ctx)
+        }
+        DialogManager.rules(ctx, ConfigManager.data.urlToRules)
       }
     })
   }
 }
-export = Rules;
+export default RulesCommand

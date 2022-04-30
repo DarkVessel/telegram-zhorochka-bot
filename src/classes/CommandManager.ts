@@ -1,9 +1,14 @@
 import { existsSync, readdirSync, statSync } from 'fs'
 import { relative } from 'path'
+import { Context } from 'telegraf'
+import { Update } from 'telegraf/typings/core/types/typegram'
 
 import Command from '../handlers/Command'
 import CommandData from '../interfaces/CommandData'
 import UnloadedCommands from '../interfaces/UnloadedCommands'
+import isAdmin from '../utils/isAdmin'
+import ConfigManager from './ConfigManager'
+import DialogManager from './DialogManager'
 
 import LogManager from './LogManager'
 const logmanager = new LogManager('./src/classes/CommandManager.ts')
@@ -31,6 +36,41 @@ class CommandManager {
     this.unloadedCommands = []
   }
 
+  public static async commandCallHandler (cmd: CommandData, ctx: Context<Update>): Promise<any> {
+    try {
+      if (!cmd.allowUseInDM && ctx.chat?.type === 'private') return DialogManager.doNotUseInDM(ctx)
+
+      if (cmd.disable) {
+        logmanager.warn('COMMANDS', `Команда "/${cmd.name}" не выполнилась, так как выключена.`)
+        return
+      }
+
+      // Проверка на создателя.
+      if (cmd.checkOwner) {
+        if (!ConfigManager.data.bot_owner) return DialogManager.notKey(ctx, 'bot_owner')
+        if (ConfigManager.data.bot_owner !== ctx.message?.from.id) return DialogManager.notOwner(ctx)
+      }
+
+      if ((cmd.checkAdmin || cmd.checkMeAdmin) && ctx.chat?.type !== 'private') {
+        if (!ctx.from) return
+        const chatAdministrators = await ctx.getChatAdministrators()
+        if (cmd.checkAdmin && !isAdmin(chatAdministrators, ctx.from?.id)) return DialogManager.notAdmin(ctx)
+        if (cmd.checkMeAdmin && !isAdmin(chatAdministrators, ctx.botInfo.id)) return DialogManager.meNotAdmin(ctx)
+      }
+
+      // @ts-ignore
+      const args = ctx.message.text
+        .trim()
+        .split(' ')
+        .filter(s => s !== '')
+
+      args.shift()
+      cmd.run(ctx, args)
+    } catch (err) {
+      logmanager.error('COMMAND', `Не удалось обработать команду /${cmd.name}`, err.stack)
+    }
+  }
+
   /**
    * Просканировать папку с командами и загрузить их.
    */
@@ -55,7 +95,7 @@ class CommandManager {
   public addCommand (path: string) {
     try {
       // Вызываем файл с командой.
-      const Command = require(path)
+      const Command = require(path).default
 
       // Получаем объект самой команды.
       const command: Command = new Command()
@@ -71,6 +111,11 @@ class CommandManager {
 
       // Записываем команду.
       this.commands.set(command.cmd.name, command.cmd)
+
+      // Выводим дополнительную информацию.
+      if (command.cmd.disable) {
+        logmanager.warn('COMMANDS', `Команда "/${command.cmd.name}" загружена, однако выполнятся не будет, из-за активного параметра "disable" в команде.`)
+      }
     } catch (error) {
       logmanager.error('COMMANDS',
         `При загрузке команды \`${path}\` произошла ошибка:`,
@@ -104,7 +149,7 @@ class CommandManager {
 
     // Загружаем команды.
     for (const file of files) {
-      const pathRelative = relative('build/src/', path + `${file}`)
+      const pathRelative = relative('build/src/classes/', path + `${file}`)
       logmanager.log('COMMANDS', `${this.commands.size + 1}. Загрузка ${pathRelative}`)
       this.addCommand(pathRelative)
     }

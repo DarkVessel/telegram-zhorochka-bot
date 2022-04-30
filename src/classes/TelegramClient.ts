@@ -23,20 +23,20 @@ class TelegramClient extends Telegraf {
   /**
    * Функция, которая запускает все обработчики.
    */
-  public startHandlers () {
-    const commangManager = new CommandManager('build/commands/')
-    const eventsManager = new EventsManager('build/events/')
-    const configManager = new ConfigManager('./src/config.json')
+  public async startHandlers () {
+    const commandManager = new CommandManager('build/src/commands/')
+    const eventsManager = new EventsManager('build/src/events/')
+    const configManager = new ConfigManager()
 
-    configManager.start()
-    commangManager.start()
-    eventsManager.start()
+    await configManager.start()
+    commandManager.start()
 
     // Загружаем команды в клиент.
-    commangManager.commands.forEach((value) => {
+    commandManager.commands.forEach((value) => {
       // bot.command обрабатывает /команды
-      this.command(value.name, value.run)
+      this.command(value.name, async (ctx) => CommandManager.commandCallHandler(value, ctx))
     })
+    eventsManager.start()
   }
 }
 

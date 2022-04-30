@@ -2,7 +2,7 @@ import { existsSync, readdirSync, statSync } from 'fs'
 // Функция relative помогает строить пути, которые будут относительны определённой папки.
 import { relative } from 'path'
 
-import UnloadedCommands from '../interfaces/UnloadedCommands'
+import UnloadedEvents from '../interfaces/UnloadedEvent'
 
 import LogManager from './LogManager'
 const logmanager = new LogManager('./src/classes/EventsManager.ts')
@@ -12,11 +12,11 @@ const logmanager = new LogManager('./src/classes/EventsManager.ts')
  */
 class EventsManager {
   public events: Array<string> // Массив загруженных файлов.
-  public unloadedEvents: Array<UnloadedCommands> // Массив, соответственно, не загруженных файлов.
+  public unloadedEvents: Array<UnloadedEvents> // Массив, соответственно, не загруженных файлов.
 
   constructor (public pathEvents: string) {
     if (!existsSync(this.pathEvents)) {
-      throw new Error('Указан неправильный путь до папки с командами.')
+      throw new Error('Указан неправильный путь до папки с ивентами.')
     }
 
     // Проверяем наличие символа "/" на конце пути.
@@ -38,8 +38,8 @@ class EventsManager {
     logmanager.log('EVENTS', 'Загрузка завершена!')
     if (this.unloadedEvents.length) {
       logmanager.warn('EVENTS',
-        `Не было загружено ${this.unloadedEvents.length} команд.`,
-        this.unloadedEvents.map((d, i) => `${i + 1}. ${d.path} (${d.error})`).join('\n'))
+        `Не было загружено ${this.unloadedEvents.length} ивентов.`,
+        this.unloadedEvents.map((d, i) => `${i + 1}. ${d.filename} (${d.error})`).join('\n'))
     }
   }
 
@@ -58,7 +58,7 @@ class EventsManager {
       const file = files[i]
       try {
         // Получаем путь к файлу относительно папки билда.
-        const pathRelative = relative('build/src/', this.pathEvents + `${file}`)
+        const pathRelative = relative('build/src/classes/', this.pathEvents + `${file}`)
         logmanager.log('EVENTS', `${i + 1}. Загрузка ${pathRelative}`)
 
         // Запускаем файл.
@@ -67,8 +67,8 @@ class EventsManager {
         // Записываем, что файл загружен.
         this.events.push(file)
       } catch (error) {
-        this.unloadedEvents.push({ error, path: file })
-        logmanager.error('EVENTS', `Ошибка при загрузке ${file}"`, error.stack)
+        this.unloadedEvents.push({ error, filename: file })
+        logmanager.error('EVENTS', `Ошибка при загрузке ${file}`, error.stack)
       }
     }
   }

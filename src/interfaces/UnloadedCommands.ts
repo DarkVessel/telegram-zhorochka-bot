@@ -1,9 +1,9 @@
 /**
  * Информация о не загруженных командах.
  */
-interface UnloadedCommands {
+interface UnloadedCommand {
   path: string,
   error: Error
 }
 
-export = UnloadedCommands;
+export default UnloadedCommand;

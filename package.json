@@ -1,45 +1,50 @@
 {
   "name": "telegram-bot-zhorochka",
-  "version": "1.5.0",
-  "description": "Мой первый Телеграм-бот, функционал неизвестен.",
-  "main": "./build/index.js",
+  "version": "0.6.0",
+  "description": "Телеграм бот для различных целей, от модерирования до развлечений.",
+  "main": "./build/src/index.js",
   "engines": {
-    "npm": ">=8.5.1",
+    "npm": ">=8.5.0",
     "node": ">=16.14.0"
   },
   "scripts": {
-    "start"    : "node build/index.js",
-    "settings" : "node scripts/settings.js",
-    "init"     : "bash scripts/initialization.sh",
-    "test"     : "mocha --require ts-node/register test/*.test.ts",
-    "pm2_start": "pm2 start build/index.js -n telegram-zhorochka"
+    "start": "node build/src/index.js",
+    "setup": "node build/setup_scripts/run_setup.js",
+    "update": "bash setup_scripts/update_client.sh",
+    "build": "tsc --watch false",
+    "init": "bash setup_scripts/initialization.sh",
+    "clear": "rm -rf builds/ typings/",
+    "pm2_start": "pm2 start build/src/index.js -n telegram-zhorochka",
+    "createEnv": "node build/setup_scripts/createEnvFile.js",
+    "tsc": "tsc"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DarkVessel/telegram-zhorochka.git"
+    "url": "git+https://gitlab.com/osel-devteam/telegram-zhorochka-bot.git"
   },
-  "author": "DarkVessel",
-  "license": "MIT",
+  "author": "Katze_942 and Pashka (turtle)",
+  "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/DarkVessel/telegram-zhorochka/issues"
+    "url": "https://gitlab.com/osel-devteam/telegram-zhorochka-bot/issues"
   },
-  "homepage": "https://github.com/DarkVessel/telegram-zhorochka#readme",
+  "homepage": "https://gitlab.com/osel-devteam/telegram-zhorochka-bot#README.md",
   "dependencies": {
     "@types/node": "^17.0.18",
     "dotenv": "^16.0.0",
     "ms": "^2.1.3",
+    "mysql2": "^2.3.3",
+    "sequelize": "^6.17.0",
     "strftime": "^0.10.1",
     "telegraf": "^4.7.0",
-    "ts-node": "^10.7.0"
+    "ts-node": "^10.7.0",
+    "typescript": "^4.6.3"
   },
   "devDependencies": {
-    "@types/mocha": "^9.1.0",
     "@typescript-eslint/eslint-plugin": "^5.13.0",
     "@typescript-eslint/parser": "^5.13.0",
     "eslint": "^7.32.0",
     "eslint-config-standard": "^16.0.3",
     "eslint-plugin-import": "^2.25.4",
-    "eslint-plugin-mocha": "^10.0.3",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.2.0"
   }
