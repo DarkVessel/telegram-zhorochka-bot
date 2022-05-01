@@ -21,7 +21,7 @@ input(colorTheText('yellow', '>>> Вы хотите начать? [Y/n]: ')).the
   process.env.DISABLE_LOGGING = 'true'
 
   // Вызываем функцию для конфигурации .env файла.
-  require('./src/setupEnv')()
+  await require('./src/setupEnv')()
   console.log()
   console.log(colorTheText('yellow', 'Подождите, идёт подключение к MySQL...'))
   require('./src/setupConfig')() // Функция для настройки конфига.
