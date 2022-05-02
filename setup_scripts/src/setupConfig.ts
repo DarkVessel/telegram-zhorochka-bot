@@ -1,5 +1,7 @@
 import ConfigManager from '../../src/classes/ConfigManager'
 import configSchema from '../../src/configSchema'
+import ConfigKeys from '../../src/interfaces/ConfigKeys'
+
 import colorTheText from './utils/colorTheText'
 import input from './utils/input'
 
@@ -17,8 +19,8 @@ module.exports = async () => {
   // Проходимся по всем ключам в конфиге
   for (let i = 0; i < keys.length; i++) {
     console.log()
-    const key = keys[i]
-    if (ConfigManager.data[key]) {
+    const key = <keyof ConfigKeys>keys[i]
+    if (key in ConfigManager.data) {
       console.log(colorTheText('green', `✔ Ключ ${key} присутствует в конфигурации.`))
     }
 
@@ -37,7 +39,7 @@ module.exports = async () => {
       if ((ConfigManager.data[key] ?? false) === false) continue
 
       // Присваиваем иначе дефолтное значение
-      ConfigManager.data[key] = data.default
+      ConfigManager.data[key] = <undefined>data.default
     } else {
       // Если нужно указать число и значение не является числом.
       if (data.type === 'number' && isNaN(Number(value))) {
@@ -45,7 +47,8 @@ module.exports = async () => {
         i--
         continue
       }
-      ConfigManager.data[key] = value
+      // @ts-ignore
+      ConfigManager.data[key] = <undefined>value
     }
     console.log(colorTheText('green', 'Установлено значение: ' + ConfigManager.data[key]))
   }

@@ -5,7 +5,10 @@ require('dotenv').config()
 
 const logmanager = new LogManager('./src/sequelize.ts')
 const { MYSQL_DATABASE, MYSQL_USERNAME, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_PORT } = process.env
-const sequelize = new SequelizeDB(<string>MYSQL_DATABASE, <string>MYSQL_USERNAME, MYSQL_PASSWORD, {
+const sequelize = new SequelizeDB({
+  database: <string>MYSQL_DATABASE,
+  username: <string>MYSQL_USERNAME,
+  password: <string>MYSQL_PASSWORD,
   host: MYSQL_HOST,
   port: Number(MYSQL_PORT),
   dialect: 'mysql',

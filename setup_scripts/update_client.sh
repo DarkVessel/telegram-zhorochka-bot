@@ -4,6 +4,13 @@ COLOR_GREEN="\e[32m"
 COLOR_YELLOW="\e[33m"
 ENDCOLOR="\e[0m"
 
+if [ $NO_COLOR ]; then
+  COLOR_RED=""
+  COLOR_YELLOW=""
+  COLOR_GREEN=""
+  ENDCOLOR=""
+fi
+
 # Проверяем зависимости...
 bash setup_scripts/dependency_check.sh
 if [[ $? -eq 1 ]]; then exit; fi

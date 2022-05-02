@@ -1,19 +1,23 @@
+// Модули.
 import { existsSync, readdirSync, statSync } from 'fs'
-// Функция relative помогает строить пути, которые будут относительны определённой папки.
-import { relative } from 'path'
+import { relative } from 'path' // Поможет строить пути, которые будут относительны определённой папки.
+import LogManager from './LogManager'
 
+// Интерфейсы и типы.
 import UnloadedEvents from '../interfaces/UnloadedEvent'
 
-import LogManager from './LogManager'
 const logmanager = new LogManager('./src/classes/EventsManager.ts')
 
 /**
  * Класс который загружает ивенты с events/
  */
 class EventsManager {
-  public events: Array<string> // Массив загруженных файлов.
-  public unloadedEvents: Array<UnloadedEvents> // Массив, соответственно, не загруженных файлов.
+  public events: Array<string>
+  public unloadedEvents: Array<UnloadedEvents>
 
+  /**
+   * @param pathEvents Папка с ивентами
+   */
   constructor (public pathEvents: string) {
     if (!existsSync(this.pathEvents)) {
       throw new Error('Указан неправильный путь до папки с ивентами.')
@@ -28,7 +32,7 @@ class EventsManager {
   }
 
   /**
-   * Запускает сканирование папки.
+   * Начинает сканировать папку с ивентами.
    */
   public start () {
     this.events = []
@@ -53,7 +57,8 @@ class EventsManager {
       .filter((x) => x.endsWith('.js')) // Фильтруем по окончанию .js
 
     logmanager.log('EVENTS', 'Загрузка ивентов.')
-    // Загружаем ивенты.
+
+    // Проходимся по массиву files
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
       try {
@@ -67,8 +72,11 @@ class EventsManager {
         // Записываем, что файл загружен.
         this.events.push(file)
       } catch (error) {
-        this.unloadedEvents.push({ error, filename: file })
-        logmanager.error('EVENTS', `Ошибка при загрузке ${file}`, error.stack)
+        this.unloadedEvents.push({
+          error: !(error instanceof Error) ? new Error(String(error)) : error,
+          filename: file
+        })
+        logmanager.error('EVENTS', `Ошибка при загрузке ${file}`, String(error))
       }
     }
   }

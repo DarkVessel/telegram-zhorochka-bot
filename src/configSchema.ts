@@ -1,45 +1,34 @@
-import { DataTypes } from 'sequelize'
-import { Telegram } from 'telegraf'
+import { DataType } from 'sequelize-typescript'
 import ConfigSchema from './interfaces/ConfigSchema'
 
 const schema: ConfigSchema = {
   logChat: {
     type: 'number',
-    typeDB: DataTypes.BIGINT,
+    typeDB: DataType.BIGINT,
     default: undefined,
     description: 'ID группы, куда будут скидываться логи и ошибки.',
     mutable: true,
-    show: true,
-    check: (data: string|number, telegram: Telegram) => new Promise(resolve => {
-      telegram.getChat(data)
-        .then(() => resolve())
-        .catch(() => resolve('Не найден чат.'))
-    })
+    show: true
   },
   adminChat: {
     type: 'number',
-    typeDB: DataTypes.BIGINT,
+    typeDB: DataType.BIGINT,
     default: undefined,
     description: 'ID группы, где сидят Администраторы вашего проекта. Туда будет скидываться важная информация.',
     mutable: true,
-    show: true,
-    check: (data: string|number, telegram: Telegram) => new Promise(resolve => {
-      telegram.getChat(data)
-        .then(() => resolve())
-        .catch(() => resolve('Не найден чат.'))
-    })
+    show: true
   },
   sendLogsToAGroup: {
     type: 'boolean',
-    typeDB: DataTypes.BOOLEAN,
+    typeDB: DataType.BOOLEAN,
     default: false,
     description: 'Отправлять логи в группу?',
     mutable: true,
     show: true
   },
-  bot_owner: {
+  botOwner: {
     type: 'number',
-    typeDB: DataTypes.BIGINT,
+    typeDB: DataType.BIGINT,
     default: undefined,
     description: 'ID аккаунта создателя бота.',
     mutable: false,
@@ -47,9 +36,17 @@ const schema: ConfigSchema = {
   },
   urlToRules: {
     type: 'string',
-    typeDB: DataTypes.STRING,
+    typeDB: DataType.STRING,
     default: undefined,
     description: 'URL-ссылка на правила вашего чата.',
+    mutable: true,
+    show: true
+  },
+  messageDeletionTimeout: {
+    type: 'number',
+    typeDB: DataType.INTEGER,
+    default: 11500,
+    description: 'Тайм-аут удаления ненужных сообщений, к примеру о том, что пользователь неправльно ввёл команду. Значение 0 отключает эту функцию.',
     mutable: true,
     show: true
   }

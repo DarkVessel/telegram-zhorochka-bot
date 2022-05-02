@@ -1,12 +1,13 @@
-import { Context } from 'telegraf'
-import { Update } from 'telegraf/typings/core/types/typegram'
+import DialogManager from '../classes/DialogManager'
+import CommandContext from '../types/CommandContext'
+import { Context } from 'grammy'
 
 /**
  * Интерфейс для команд.
  */
 interface CommandData {
     readonly name: string, // Название команды
-    readonly checkOwner: boolean, // Команда будет доступна только создателям бота. 
+    readonly checkOwner: boolean, // Команда будет доступна только создателям бота.
     readonly checkAdmin: boolean, // ...Для админов.
     readonly checkMeAdmin: boolean, // Проверка, чтобы бот был админом.
     readonly allowUseInDM: boolean, // Разрешение на использование команды в ЛС.
@@ -16,7 +17,7 @@ interface CommandData {
      * @param ctx - Экземпляр сообщения.
      * @param args - Массив аргументов.
      */
-    run(ctx: Context<Update>, args: Array<string>): void | Promise<any>
+    run(ctx: CommandContext<Context>, args: Array<string>, extra: { dialogManager: DialogManager }): void | Promise<any>
 }
 
-export default CommandData;
+export default CommandData

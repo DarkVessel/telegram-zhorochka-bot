@@ -4,6 +4,13 @@ COLOR_GREEN="\e[32m"
 COLOR_YELLOW="\e[33m"
 ENDCOLOR="\e[0m"
 
+if [ $NO_COLOR ]; then
+  COLOR_RED=""
+  COLOR_YELLOW=""
+  COLOR_GREEN=""
+  ENDCOLOR=""
+fi
+
 echo -e "> ${COLOR_YELLOW}Запуск...${ENDCOLOR}"
 
 # Проверяем зависимости...

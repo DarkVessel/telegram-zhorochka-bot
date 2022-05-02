@@ -1,14 +1,26 @@
+// Модули.
 import { existsSync, readdirSync, statSync } from 'fs'
 import { relative } from 'path'
-import { Context } from 'telegraf'
-import { Update } from 'telegraf/typings/core/types/typegram'
 
-import Command from '../handlers/Command'
+// Интерфейсы и типы.
+import UnloadedCommands from '../interfaces/UnloadedCommand'
+import CommandContext from '../types/CommandContext'
 import CommandData from '../interfaces/CommandData'
-import UnloadedCommands from '../interfaces/UnloadedCommands'
-import isAdmin from '../utils/isAdmin'
+import { Context } from 'grammy'
+
+// Менеджеры, обработчики и утилиты.
+import generateBasicDialogTags from '../utils/generateBasicDialogTags'
 import ConfigManager from './ConfigManager'
 import DialogManager from './DialogManager'
+import isAdmin from '../utils/isAdmin'
+import bot from '../telegramClient'
+import Command from './Command'
+
+// Диалоги.
+import cannotBeUsedInDM from '../contents/commandHandler/cannotBeUsedInDM.dialogues'
+import memberNotAdmin from '../contents/commandHandler/memberNotAdmin.dialogues'
+import notBotCreator from '../contents/commandHandler/notBotCreator.dialogues'
+import botNotAdmin from '../contents/commandHandler/botNotAdmin.dialogues'
 
 import LogManager from './LogManager'
 const logmanager = new LogManager('./src/classes/CommandManager.ts')
@@ -36,38 +48,63 @@ class CommandManager {
     this.unloadedCommands = []
   }
 
-  public static async commandCallHandler (cmd: CommandData, ctx: Context<Update>): Promise<any> {
+  public static async commandCallHandler (cmd: CommandData, ctx: CommandContext<Context>): Promise<any> {
     try {
-      if (!cmd.allowUseInDM && ctx.chat?.type === 'private') return DialogManager.doNotUseInDM(ctx)
+      // Генерируем теги.
+      const dialogManager = new DialogManager(ctx.chat.id, ctx.message?.message_id)
+      const tags = generateBasicDialogTags(ctx)
 
+      // Если команда отключена.
       if (cmd.disable) {
-        logmanager.warn('COMMANDS', `Команда "/${cmd.name}" не выполнилась, так как выключена.`)
-        return
+        return logmanager.warn('COMMANDS', `Команда "/${cmd.name}" не выполнилась, так как выключена.`)
       }
 
-      // Проверка на создателя.
+      // Выдаём ошибку, если команда была использована в ЛС.
+      if (!cmd.allowUseInDM && ctx.chat?.type === 'private') {
+        return dialogManager.send(cannotBeUsedInDM, { tags, deleteMsg: true })
+      }
+
+      // Проверка, чтобы команду мог выполнять только создатель бота.
       if (cmd.checkOwner) {
-        if (!ConfigManager.data.bot_owner) return DialogManager.notKey(ctx, 'bot_owner')
-        if (ConfigManager.data.bot_owner !== ctx.message?.from.id) return DialogManager.notOwner(ctx)
+        if (!ConfigManager.data.botOwner) {
+          return logmanager.warn('COMMANDS', `Команда "/${cmd.name}" не выполнилась, из-за отсутствия ключа "botOwner" в модели Configuration MySQL.`)
+        }
+
+        if (ConfigManager.data.botOwner !== ctx.message?.from.id) {
+          return dialogManager.send(notBotCreator, { tags, deleteMsg: true })
+        }
       }
 
+      // Проверка на то, чтобы бот был админом и участник тоже.
+      // Проверка на админа пропускается, если чат приватный.
       if ((cmd.checkAdmin || cmd.checkMeAdmin) && ctx.chat?.type !== 'private') {
         if (!ctx.from) return
+
+        // Получаем список админов.
         const chatAdministrators = await ctx.getChatAdministrators()
-        if (cmd.checkAdmin && !isAdmin(chatAdministrators, ctx.from?.id)) return DialogManager.notAdmin(ctx)
-        if (cmd.checkMeAdmin && !isAdmin(chatAdministrators, ctx.botInfo.id)) return DialogManager.meNotAdmin(ctx)
+
+        // Проверка, чтобы участник был админом.
+        if (cmd.checkAdmin && !isAdmin(chatAdministrators, ctx.from?.id)) {
+          return dialogManager.send(memberNotAdmin, { tags, deleteMsg: true })
+        }
+
+        // Проверка, чтобы бот был админом.
+        if (cmd.checkMeAdmin && !isAdmin(chatAdministrators, bot.botInfo.id)) {
+          logmanager.warn('COMMANDS', `Не удалось выполнить команду "/${cmd.name}", так как бот не является админом.`)
+          return dialogManager.send(botNotAdmin, { tags, deleteMsg: true })
+        }
       }
 
-      // @ts-ignore
-      const args = ctx.message.text
-        .trim()
+      // Получаем аргументы после команды.
+      const args = String(ctx.message?.text)
+        .trim() // Удаляем пробелы по бокам.
         .split(' ')
-        .filter(s => s !== '')
+        .filter(s => s !== '') // Удаляем пустые аргументы.
 
-      args.shift()
-      cmd.run(ctx, args)
+      args.shift() // Удаляем первый аргумент, это /command
+      cmd.run(ctx, args, { dialogManager }) // Запускаем команду.
     } catch (err) {
-      logmanager.error('COMMAND', `Не удалось обработать команду /${cmd.name}`, err.stack)
+      logmanager.error('COMMAND', `Не удалось обработать команду /${cmd.name}`, String(err))
     }
   }
 
@@ -119,8 +156,13 @@ class CommandManager {
     } catch (error) {
       logmanager.error('COMMANDS',
         `При загрузке команды \`${path}\` произошла ошибка:`,
-        error.stack)
-      this.unloadedCommands.push({ path, error })
+        String(error))
+      this.unloadedCommands.push({
+        path,
+        error: !(error instanceof Error)
+          ? new Error(String(error))
+          : error
+      })
     }
   }
 

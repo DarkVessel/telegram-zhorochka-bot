@@ -1,44 +1,82 @@
-// В конфиг-схеме хранятся данные о том, как должен быть устроен конфиг.
-import { Model } from 'sequelize/types'
+// В configSchema хранятся данные о том, как устроен конфиг.
 import configSchema from '../configSchema'
+import { Model } from 'sequelize-typescript'
 
-// Копия configSchema, но она отображает только как будет выглядить сам config.json
-import ConfigJSON from '../interfaces/ConfigKeys'
+// Интерфейс и модель Config-a.
+import ConfigKeys from '../interfaces/ConfigKeys'
 import Configuration from '../models/Configuration'
-
 type modelType = Model<any, any>
+
+interface DefaultConfiguration {
+  [key: string]: undefined | null | number | string | boolean
+}
+
+/**
+ * Класс, для управления конфигурацией в MySQL.
+ */
 class ConfigManager {
+  public data: ConfigKeys
+
   // Данный элемент статистический, это означает что к нему можно обращаться напрямую, без инициализации класса.
   // В data хранится конфиг из config.json
-  static data: ConfigJSON = {}
+  private static _data: ConfigKeys = {}
+  public static get data (): ConfigKeys {
+    return ConfigManager._data
+  }
+
+  public static set data (value: ConfigKeys) {
+    ConfigManager._data = value
+  }
 
   // Хранит активную модель конфигурации.
   static model: modelType | null = null
 
+  constructor () {
+    // Засовываем гиперссылку на ConfigManager.data
+    this.data = ConfigManager.data
+  }
+
+  /**
+   * Запустить менеджер конфигурации. После запуска обновятся таблицы, а в ConfigManager.data появится сам конфиг.
+   */
   public async start () {
     return this.fetch()
   }
 
+  /**
+   * Получить модель активной конфигурации.
+   * В случае, если в базе данных config не найден, создастся новая запись со значениями по умолчанию.
+   * @param again При значении true заново получает модель из базы данных.
+   * @returns { Promise<modelType> }
+   */
   public async getModel (again?: boolean): Promise<modelType> {
+    // Если модели нет или again == true
     if (!ConfigManager.model || again) {
       ConfigManager.model = await Configuration.findOne()
+
+      // Если findOne() вернул null - создастся новая запись.
       if (!ConfigManager.model) {
         ConfigManager.model = await Configuration.create()
       }
     }
 
+    // Возвращаем модель.
     return <modelType>ConfigManager.model
   }
 
   /**
-   * Перезаписать конфиг.
-   * @returns { void }
+   * Сохранить конфигурацию в базу данных. Данные сохраняются из ConfigManager.data
+   * @returns { Promise<void> }
    */
   public async save (): Promise<void> {
     try {
+      // Получаем модель.
       const model = await this.getModel()
 
+      // Очищаем ConfigManager.data от ненужных ключеЙ.
       this._removeRedundantElements()
+
+      // Применяем изменения.
       await Configuration.upsert({
         id: model.getDataValue('id'),
         ...ConfigManager.data
@@ -46,17 +84,17 @@ class ConfigManager {
     } catch (err) {
       console.error(
         '[CONFIG_MANAGER]',
-        'Произошла ошибка при попытке записать данные в MySQL',
-        err.stack
+        'Произошла ошибка при попытке записать данные в MySQL.',
+        err
       )
     }
   }
 
   /**
-   * Перечитать конфиг.
-   * @returns { ConfigJSON }
+   * Отправляет запрос на сервер MySQL для получения конфигурации.
+   * @returns { Promise<ConfigKeys> }
    */
-  public async fetch (): Promise<ConfigJSON> {
+  public async fetch (): Promise<ConfigKeys> {
     try {
       const model = await this.getModel(true)
 
@@ -67,18 +105,18 @@ class ConfigManager {
     } catch (error) {
       console.error('[CONFIG_MANAGER]',
         'Произошла ошибка при попытке получить Configuration из MySQL.',
-        error.stack)
+        error)
       this.reset()
     }
     return ConfigManager.data
   }
 
   /**
-   * Вернуть дефолтный конфиг.
-   * @returns { ConfigJSON }
+   * Получить конфигурацию по умолчанию.
+   * @returns { ConfigKeys }
    */
-  public returnDefaultConfig (): ConfigJSON {
-    const config = {}
+  public getDefaultConfig (): ConfigKeys {
+    const config: DefaultConfiguration = {}
 
     // Проходимся по схеме конфига.
     for (const key in configSchema) {
@@ -86,25 +124,26 @@ class ConfigManager {
       config[key] = configSchema[key].default
     }
 
-    // Выводим дефолтный конфиг.
     return config
   }
 
   /**
-   * Перезаписывает файл конфига по дефолту.
+   * Сбрасывает всю конфигурацию на сервере по умолчанию.
+   * @returns { Promise<ConfigKeys> }
    */
-  public reset (): Promise<void> {
+  public async reset (): Promise<ConfigKeys> {
     // Присваиваем значению data дефолтный конфиг.
-    const data = this.returnDefaultConfig()
+    const data = this.getDefaultConfig()
 
-    for (const key in data) {
-      ConfigManager.data[key] = data[key]
-    }
-
-    return this.save() // Перезаписываем файл.
+    ConfigManager.data = data
+    await this.save()
+    return data
   }
 
-  private _removeRedundantElements () {
+  /**
+   * Удаляет из ConfigManager.data такие ненужные ключи, как id, createdAt и updatedAt
+   */
+  private _removeRedundantElements (): void {
     delete ConfigManager.data.id
     delete ConfigManager.data.createdAt
     delete ConfigManager.data.updatedAt

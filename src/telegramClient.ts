@@ -1,5 +1,5 @@
 // Инициализируем класс LogManager.
-// Он отвечает за красивое оформление текста в консоли, а также отправку ошибок в группу Телеграмма.
+// Он отвечает за красивое оформление текста в консоли, а также отправку ошибок в чат Телеграмма.
 import ConfigManager from './classes/ConfigManager'
 import LogManager from './classes/LogManager'
 
@@ -11,20 +11,19 @@ const bot = new TelegramClient(<string>process.env.BOT_TOKEN)
 
 const configManager = new ConfigManager()
 configManager.start().then(async () => {
-  await bot.launch()
-  // Этот блок кода выполняется после того, как бот вышел в сеть.
+  // Создаём экземпляр LogManager'a
+  const logmanager = new LogManager('./src/telegramClient.ts')
+  logmanager.log('CLIENT', 'Login...')
 
   // Сообщаем LogManager'y о том, что бот залогинился и передаём ему экземпляр.
   LogManager.telegramClient = bot
   LogManager.config = ConfigManager.data
 
-  // Создаём экземпляр LogManager'a
-  const logmanager = new LogManager('./src/telegramClient.ts')
-  logmanager.log('CLIENT', 'Login!')
-
   // Вызываем в боте функцию старта обработчиков.
   // Проверьте classes/TelegramClient.ts чтобы понять, о чём я.
-  bot.startHandlers()
+  await bot.startHandlers()
+  await bot.start()
+  logmanager.log('CLIENT', 'Login!')
 }).catch(err => {
   console.error('>>> Произошла ошибка при попытке бота залогиниться!')
   throw err

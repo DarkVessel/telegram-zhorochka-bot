@@ -19,22 +19,22 @@
       // Настройки для поиска @types
       "module": "commonjs",
       "lib": ["es5", "es6", "es2015.promise", "es2016.array.include"], // Набор библиотечных файлов полифилов, которые будут включены в итоговый выходной файл.
-      "allowJs": false, // Разрешать компилировать файлы с JavaScript-кодом?
+      "allowJs": true, // Разрешать компилировать файлы с JavaScript-кодом?
       "alwaysStrict": true, // Компилировать ли каждый файл в строгом режиме и создавать ли 'use strict' для каждого выходного файла? Требуется TypeScript версии 2.1 или новее.
-      "checkJs": false, // Сообщить об ошибках в .js-файлах? Используйте совместно с "allowJs".
+      "checkJs": true, // Сообщить об ошибках в .js-файлах? Используйте совместно с "allowJs".
       "downlevelIteration": true, // Обеспечьте полную поддержку итераций для for - in, ..., деструктуризации при настройке на ES5 или ES3?
       "importHelpers": false, // Имортировать созданные хелперы (__extends, __rest и так далее) из "tslib".
       "noEmitOnError": true, // Не создавать итоговый файл, если во время компиляции произошла ошибка.
       "noEmitHelpers": false, // Не помещать в код итогового файла функции хелперы.
-      "noUnusedLocals": false, // Показывать ошибку, если где-то найдены неиспользуемые локальные значения.
+      "noUnusedLocals": true, // Показывать ошибку, если где-то найдены неиспользуемые локальные значения.
       "noUnusedParameters": false, // Показывать ошибку, если где-то найдены неиспользуемые параметры.
       "noImplicitUseStrict": false, // Не записывать 'use strict' в итоговый выходной файл?
       "pretty": true, // Окрашивать в терминале сообщения об ошибках.
       "removeComments": false, // Удалить все комментарии из итогового файла.
       "sourceMap": true, // Создавать ли соответствующие source map файлы ".map"?
-      "strict": false, // Включить ли все строги проверки типов сразу: noImplicitAny, noImplicitThis, alwaysStrict, strictNullChecks, strictFunctionTypes, strictPropertyInitialization?
+      "strict": true, // Включить ли все строги проверки типов сразу: noImplicitAny, noImplicitThis, alwaysStrict, strictNullChecks, strictFunctionTypes, strictPropertyInitialization?
       "strictNullChecks": true, // Значения "null" и "undefined" могут быть присвоены только значениям данного типа и значениям только с типом "any"?
-      "target": "es2021", // Тип кода создаваемого итогового файла.
+      "target": "es2022", // Тип кода создаваемого итогового файла.
       "watch": true, // Запустить компилятор в режиме отслеживания изменений во входных файлах и их повторной компиляции?
 
       // Дополнительные настройки.
@@ -47,9 +47,9 @@
       "diagnostics": false, // Показывать ли диагностическую информацию?
       "disableSizeLimit": true, // Отключить ограничение размера в проекте JavaScript.
       "emitBOM": false, // Записывать ли UTF-8 Byte Order Mark (BOM) в начало итогового файла?
-      "emitDecoratorMetadata": false, // Создавать метаданные для объявлений декораторов в исходном коде?
+      "emitDecoratorMetadata": true, // Создавать метаданные для объявлений декораторов в исходном коде?
       "esModuleInterop": false, // Создать хелперы __importStar и __importDefault для обеспечения совместимости с экосистемой Babel и включить allowSyntheticDefaultImports для совместимости с системой типов.
-      "experimentalDecorators": false, // Включить экспериментальную поддержку декораторов EcmaScript?
+      "experimentalDecorators": true, // Включить экспериментальную поддержку декораторов EcmaScript?
       "forceConsistentCasingInFileNames": true, // Запретить несогласованные ссылки на один и тот же файл?
       "inlineSources": false, // Помещать ли source в итоговый файл рядом с source map?
       "inlineSourceMap": false, // Помещать ли source map в итоговый файл, вместо того чтобы иметь отдельный файл с source map?
@@ -60,10 +60,10 @@
       "moduleResolution": "node", // Определить способ поиска модулей в папках: как в Node.js или классический, как в TypeScript 1.5 и ниже.
       "newLine": "CRLF", // Определяет тип завершения строк в итоговом файле.
       "noEmit": false, // Не создавать итоговый файл.
-      "noFallthroughCasesInSwitch": false, // Сообщить об ошибке в случае обнаружения проваливания в конструкции switch-case?
-      "noImplicitAny": false, // Показывать ошибку, если где-то задан тип "any".
-      "noImplicitThis": false, // Показывать ошибку на "this", если где-то задан тип "any".
-      "noImplicitReturns": false, // Сообщить об ошибке, когда не все пути кода в функции возвращают значение?
+      "noFallthroughCasesInSwitch": true, // Сообщить об ошибке в случае обнаружения проваливания в конструкции switch-case?
+      "noImplicitAny": true, // Показывать ошибку, если где-то задан тип "any".
+      "noImplicitThis": true, // Показывать ошибку на "this", если где-то задан тип "any".
+      "noImplicitReturns": true, // Сообщить об ошибке, когда не все пути кода в функции возвращают значение?
       "noLib": false, // Не использовать стандартный библиотечный файл по умолчанию (lib.d.ts).
       "noResolve": false, // Не добавлять "/// <reference path="..." />" в список скомпилированных файлов.
       "noStrictGenericChecks": false, // Отключить строгую проверку типов джинериков в типах функций?
@@ -76,7 +76,7 @@
       "suppressImplicitAnyIndexErrors": false, // Подавлять "noImplicitAny" ошибки для индексирования объектов, не имеющих индексных подписей.
       "stripInternal": false, // Не создавать объявления для кода, который имеет аннотацию JSDoc /** @internal */.
       "strictFunctionTypes": false, // Отключить проверку бивариантных параметров для типов функций.
-      "strictPropertyInitialization": false, // Убедитесь, что свойства класса, имеющие значения undefined, получают новые значения внутри конструктора.
+      "strictPropertyInitialization": true, // Убедитесь, что свойства класса, имеющие значения undefined, получают новые значения внутри конструктора.
       "traceResolution": false // Выводить в логи сообщения о нахождении путей до модулей.
     },
     "exclude": [

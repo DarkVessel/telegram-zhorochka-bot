@@ -7,7 +7,7 @@
         {
             "type": "pwa-node",
             "request": "launch",
-            "name": "Launch Program",
+            "name": "Run!",
             "skipFiles": [
                 "<node_internals>/**"
             ],
@@ -17,22 +17,7 @@
                 "${workspaceFolder}/build/src/**/*.js.map",
                 "${workspaceFolder}/build/src/**/**/*.js.map"
             ],
-            "runtimeVersion": "16.14.0",
-        },
-        {
-            "type": "pwa-node",
-            "request": "launch",
-            "name": "Test Program",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "program": "${workspaceFolder}/build/test.js",
-            "outFiles": [
-                "${workspaceFolder}/build/*.js.map",
-                "${workspaceFolder}/build/**/*.js.map",
-                "${workspaceFolder}/build/**/**/*.js.map"
-            ],
-            "runtimeVersion": "16.14.0",
+            "runtimeVersion": "16.15.0",
         }
     ]
 }

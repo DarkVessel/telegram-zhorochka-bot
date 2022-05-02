@@ -1,4 +1,5 @@
-import { Model, ModelAttributes } from 'sequelize'
+import { ModelAttributes } from 'sequelize/types'
+import { Model } from 'sequelize-typescript'
 import configSchema from '../configSchema'
 import sequelize from '../sequelize'
 

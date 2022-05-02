@@ -6,4 +6,4 @@ interface UnloadedCommand {
   error: Error
 }
 
-export default UnloadedCommand;
+export default UnloadedCommand

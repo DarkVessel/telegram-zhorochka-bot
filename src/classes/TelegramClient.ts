@@ -1,23 +1,19 @@
-// Update и Context - Это описание типов.
-// Telegraf - модуль для работы с Телеграммом.
-import { Update } from 'telegraf/typings/core/types/typegram'
-import { Context, Telegraf } from 'telegraf'
+import { Bot, BotConfig, Context } from 'grammy'
 
 // Инициализация классов для взаимодействия с командами, ивентами и конфигом.
 import CommandManager from './CommandManager'
 import EventsManager from './EventsManager'
-import ConfigManager from './ConfigManager'
 
-// Создаём класс, который наследуется от Telegraf.
+// Создаём класс, который наследуется от grammY.
 // Наследованный класс легко расширять своими функциями.
-class TelegramClient extends Telegraf {
-  public constructor (token: string, options?: Partial<Telegraf.Options<Context<Update>>> | undefined) {
+class TelegramClient extends Bot {
+  public constructor (token: string, options?: BotConfig<Context> | undefined) {
     // Передаём токен и опции Телеграфу.
     super(token, options)
 
     // При Ctrl + C или других сигналах, бот будет отключатся от Телеграмма.
-    process.once('SIGINT', () => this.stop('SIGINT'))
-    process.once('SIGTERM', () => this.stop('SIGTERM'))
+    process.once('SIGINT', () => this.stop())
+    process.once('SIGTERM', () => this.stop())
   }
 
   /**
@@ -26,9 +22,7 @@ class TelegramClient extends Telegraf {
   public async startHandlers () {
     const commandManager = new CommandManager('build/src/commands/')
     const eventsManager = new EventsManager('build/src/events/')
-    const configManager = new ConfigManager()
 
-    await configManager.start()
     commandManager.start()
 
     // Загружаем команды в клиент.

@@ -1,24 +1,38 @@
-import { Message } from 'telegraf/typings/core/types/typegram'
 import { timezone } from 'strftime'
 
+// Интерфейсы.
+import { Message } from 'grammy/out/platform.node'
+import ConfigKeys from '../interfaces/ConfigKeys'
 import TelegramClient from './TelegramClient'
-import ConfigJSON from '../interfaces/ConfigKeys'
-const strftime = timezone(180) // 180 - это московская таймзона.
 
+const strftime = timezone(180) // 180 - это московская таймзона.
 const colors = {
+  log: '14',
   error: '1',
   warn: '3'
 }
 
-// Какой тип возвращают все функции из класса LogManager'a?
-type returnMethods = Promise<Message.TextMessage | void>;
+// Какой тип возвращают все функции из класса LogManager.
+type returnMethods = Promise<void | Message.TextMessage>
 
-// Это просто разделитель текстовый.
-const strip: string = '-'.repeat(50)
+// Это просто текстовый разделитель.
+const strip = '-'.repeat(50)
 
 /**
  * Данный класс ответственный за вывод логов.
- * Например он их украшает, а ошибки выводит в Телеграм группу.
+ * Например, он их окрашивает в различные цвета, а ошибки выводит в Телеграм чат.
+ * @example Пример использования функции .log
+ * ```js
+ * const logManager = new LogManager('./src/classes/LogManager.ts')
+ * logManager.log('DATABASE', 'Подключение выполнилось успешно!')
+ * logManager.log('DATABASE', 'Подключение выполнилось успешно!', [`Дополнительная информация: ...`])
+ * ```
+ * @example Пример использования функции .warn/.error
+ * ```js
+ * logManager.warn('DATABASE', 'Слишком долгое подключение.')
+ * logManager.warn('DATABASE', 'Произошла ошибка при отправке чего-то', 'Текст ошибки.')
+ * logManager.warn('DATABASE', 'Произошла ошибка при отправке чего-то', 'Текст ошибки.', ['Дополнительная информация...'])
+ * ```
  */
 class LogManager {
   // Последний путь, о котором сообщалось в логах.
@@ -30,7 +44,7 @@ class LogManager {
   // Телеграм клиент.
   static telegramClient: TelegramClient
 
-  static config: ConfigJSON = {}
+  static config: ConfigKeys = {}
 
   /**
    * @param path - Путь, который будет показываться при выводе лога.
@@ -59,18 +73,24 @@ class LogManager {
     if (this.path !== LogManager.lastPath || typeConsole !== LogManager.lastTypeLog) {
       LogManager.lastPath = this.path
       LogManager.lastTypeLog = typeConsole
-      console.log(`\n\x1B[38;5;5m\x1B[1m${this.path}\x1B[22m\x1B[39m`)
+      if (process.env.NO_COLOR) {
+        console.log('\n', this.path)
+      } else console.log(`\n\x1B[38;5;5m\x1B[1m${this.path}\x1B[22m\x1B[39m`)
     }
 
     // [TYPE: time] >> Text
     // Пример: [COMMANDS: 20:02:47] >> Команды загрузились!
-    console[typeConsole](`\x1B[38;5;${colors[typeConsole] ?? 14}m\x1B[1m[${typeLog.toUpperCase()}: ${time}]\x1B[22m\x1B[39m >> ${title}`)
+    if (process.env.NO_COLOR) {
+      console[typeConsole](`[${typeLog.toUpperCase}: ${time}] >> ${title}`)
+    } else {
+      console[typeConsole](`\x1B[38;5;${colors[typeConsole]}m\x1B[1m[${typeLog.toUpperCase()}: ${time}]\x1B[22m\x1B[39m >> ${title}`)
+    }
 
     // Если есть блоки дополнительные - выводим их.
     if (blocks?.length) {
       console.log(strip)
       for (const block of blocks) {
-        console[typeConsole](`${block}\n${strip}`)
+        console[typeConsole](block, '\n', strip)
       }
     }
 
@@ -81,7 +101,7 @@ class LogManager {
     // НЕ отправится лог в 3 случаях:
     // 1. Если лог является обычным, а не предупреждением или ошибкой.
     // 2. Если параметр sendLogsToAGroup в конфиге стоит в значении false
-    // 3. Если не установлен параметр logChannel в конфиге.
+    // 3. Если не установлен параметр logChat в конфиге.
     if (!['error', 'warn'].includes(typeConsole) ||
       !LogManager.config.sendLogsToAGroup ||
       !LogManager.config.logChat) return
@@ -95,7 +115,7 @@ class LogManager {
     }
 
     // Отправка сообщения в чат.
-    const sendMessage = LogManager.telegramClient.telegram
+    const sendMessage = LogManager.telegramClient.api
       .sendMessage(LogManager.config.logChat,
         `>> *${this.path}*\n[[ ${typeLog.toUpperCase()} ]] >> ${title}\n${formatBlocks ?? ''}`,
         { parse_mode: 'Markdown' })
@@ -107,22 +127,57 @@ class LogManager {
     return sendMessage
   }
 
+  /**
+   * Отправить обычный лог.
+   * @param type Тип лога, любая строка.
+   * @param title Основное сообщение.
+   * @param blocks Дополнительные блоки.
+   * @example ```js
+   * logManager.log('DATABASE', 'Подключение выполнилось успешно!')
+   * logManager.log('DATABASE', 'Подключение выполнилось успешно!', [`Дополнительная информация: ...`])
+   * ```
+   * @returns { returnMethods }
+   */
   public log (type: string, title: string, blocks?: Array<string>): returnMethods {
     return this._send('log', type, title, blocks)
   }
 
-  public error (type: string, title: string, error?: string, blocks?: Array<string>): returnMethods {
-    if (!blocks) blocks = []
-    if (error) blocks.push(error)
-
-    return this._send('error', type, title, blocks)
-  }
-
+  /**
+   * Отправить лог с предупреждением.
+   * @param type Тип лога, любая строка.
+   * @param title Основное сообщение.
+   * @param blocks Дополнительные блоки.
+   * @example ```js
+   * logManager.warn('DATABASE', 'Слишком долгое подключение.')
+   * logManager.warn('DATABASE', 'Произошла ошибка при отправке чего-то', 'Текст ошибки.')
+   * logManager.warn('DATABASE', 'Произошла ошибка при отправке чего-то', 'Текст ошибки.', ['Дополнительная информация...'])
+   * ```
+   * @returns { returnMethods }
+   */
   public warn (type: string, title: string, warn?: string, blocks?: Array<string>): returnMethods {
     if (!blocks) blocks = []
     if (warn) blocks.push(warn)
 
     return this._send('warn', type, title, blocks)
+  }
+
+  /**
+   * Отправить лог c ошибкой.
+   * @param type Тип лога, любая строка.
+   * @param title Основное сообщение.
+   * @param blocks Дополнительные блоки.
+   * @example ```js
+   * logManager.error('CLIENT', 'Произошзла какая-то ошибка.')
+   * logManager.error('CLIENT', 'Произошла какая-то ошибка.', 'Текст ошибки.')
+   * logManager.error('CLIENT', 'Произошла какая-то ошибка.', 'Текст ошибки.', ['Дополнительная информация...'])
+   * ```
+   * @returns { returnMethods }
+   */
+  public error (type: string, title: string, error?: string, blocks?: Array<string>): returnMethods {
+    if (!blocks) blocks = []
+    if (error) blocks.push(error)
+
+    return this._send('error', type, title, blocks)
   }
 }
 
