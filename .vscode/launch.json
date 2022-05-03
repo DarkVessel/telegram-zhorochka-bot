@@ -5,9 +5,8 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "pwa-node",
-            "request": "launch",
             "name": "Run!",
+            "request": "launch",
             "skipFiles": [
                 "<node_internals>/**"
             ],
@@ -17,7 +16,24 @@
                 "${workspaceFolder}/build/src/**/*.js.map",
                 "${workspaceFolder}/build/src/**/**/*.js.map"
             ],
+            "type": "pwa-node",
+            "runtimeVersion": "16.15.0"
+        },
+        {
+            "name": "Run setup!",
+            "program": "${workspaceFolder}/build/setup_scripts/run_setup.js",
+            "request": "launch",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/build/setup_scripts/*.js.map",
+                "${workspaceFolder}/build/setup_scripts/**/*.js.map",
+                "${workspaceFolder}/build/setup_scripts/**/**/*.js.map",
+            ],
+            "type": "pwa-node",
             "runtimeVersion": "16.15.0",
-        }
+            "console": "externalTerminal"
+        },
     ]
 }

@@ -16,9 +16,7 @@ input(colorTheText('yellow', '>>> Вы хотите начать? [Y/n]: ')).the
     return
   }
 
-  // Отключить логи от sequelize и LogManager.
   process.env.DISABLE_LOGGING_MYSQL = 'true'
-  process.env.DISABLE_LOGGING = 'true'
 
   // Вызываем функцию для конфигурации .env файла.
   await require('./src/setupEnv')()

@@ -17,6 +17,7 @@
     "pm2_start": "pm2 start build/src/index.js -n telegram-zhorochka",
     "createEnv": "node build/setup_scripts/createEnvFile.js",
     "createDefaultDialog": "bash setup_scripts/create_default_dialog.sh",
+    "config": "node build/setup_scripts/run_setupConfig.js",
     "tsc": "tsc"
   },
   "repository": {

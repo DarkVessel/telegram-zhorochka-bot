@@ -61,7 +61,7 @@ class CommandManager {
 
       // Выдаём ошибку, если команда была использована в ЛС.
       if (!cmd.allowUseInDM && ctx.chat?.type === 'private') {
-        return dialogManager.send(cannotBeUsedInDM, { tags, deleteMsg: true })
+        return dialogManager.send(cannotBeUsedInDM, { tags })
       }
 
       // Проверка, чтобы команду мог выполнять только создатель бота.

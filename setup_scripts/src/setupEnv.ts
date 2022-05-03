@@ -14,29 +14,29 @@ module.exports = async () => {
   for (const key in envSchema) {
     if (process.env[key]) {
       console.log(colorTheText('green', `✔ Ключ ${key} присутствует в .env`))
-      values[key] = "'" + <string>process.env[key] + "'"
+      values[key] = <string>process.env[key]
     }
 
     const data = envSchema[key]
     console.log()
     console.log(colorTheText('blue', `[${key}]`))
-    if (data.default) console.log(`По умолчанию: ${colorTheText('blue', data.default)}`)
     console.log(colorTheText('yellow', `>>> ${data.description}`))
+    if (data.default) console.log(`По умолчанию: ${colorTheText('blue', data.default)}`)
+    if (values[key]) console.log(`У вас стоит значение: ${colorTheText('blue', values[key])}\nЕсли хотите оставить значение такое, какое есть, просто нажмите Enter ничего не прописывая.`)
 
     // Спрашиваем у пользователя значение.
     const value = await input(`${key}=`)
     let assignedValue
     if (!value) {
-      assignedValue = data.default
+      assignedValue = values[key] || data.default
     } else assignedValue = value
 
     // Если значение отсутствует.
     if ((assignedValue ?? false) === false) continue
 
     // Обращаем применямое значение в кавычки для надёжности.
-    assignedValue = "'" + assignedValue + "'"
-    process.env[key] = assignedValue
-    values[key] = assignedValue
+    process.env[key] = String(assignedValue)
+    values[key] = '"' + assignedValue + '"'
   }
 
   writeFileSync('.env', Object.keys(values)

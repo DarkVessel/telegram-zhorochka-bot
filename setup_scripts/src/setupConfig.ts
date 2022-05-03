@@ -9,6 +9,8 @@ const configManager = new ConfigManager()
 module.exports = async () => {
   // Обновляем информацию о конфиге.
   await configManager.start()
+  // Отключить логи от LogManager.
+  process.env.DISABLE_LOGGING = 'true'
 
   console.log(colorTheText('yellow', `Настроим config.json!
 Для пропуска ненужных настроек, напишите skip, тогда применится дефолтное значение.`))
@@ -20,16 +22,13 @@ module.exports = async () => {
   for (let i = 0; i < keys.length; i++) {
     console.log()
     const key = <keyof ConfigKeys>keys[i]
-    if (key in ConfigManager.data) {
-      console.log(colorTheText('green', `✔ Ключ ${key} присутствует в конфигурации.`))
-    }
 
     saveToDB = true
 
     const data = configSchema[key]
     console.log(`Настройка ${colorTheText('blue', `[${key}]`)}`)
     console.log(`Тип: ${colorTheText('blue', `${data.type}`)}`)
-    console.log(`По дефолту: ${colorTheText('blue', `${data.default}`)}`)
+    console.log(`По умолчанию: ${colorTheText('blue', `${data.default}`)}`)
     console.log(`Описание: ${colorTheText('blue', `${data.description}`)}`)
     console.log(`Ваше значение установлено: ${colorTheText('blue', `${ConfigManager.data[key] ?? 'Не установлено.'}`)}`)
 
