@@ -21,6 +21,5 @@ input(colorTheText('yellow', '>>> Вы хотите начать? [Y/n]: ')).the
   // Вызываем функцию для конфигурации .env файла.
   await require('./src/setupEnv')()
   console.log()
-  console.log(colorTheText('yellow', 'Подождите, идёт подключение к MySQL...'))
   require('./src/setupConfig')() // Функция для настройки конфига.
 })

@@ -1,5 +1,5 @@
 // В configSchema хранятся данные о том, как устроен конфиг.
-import configSchema from '../configSchema'
+import configSchema from '../scheme/configScheme'
 import { Model } from 'sequelize-typescript'
 
 // Интерфейс и модель Config-a.

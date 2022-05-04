@@ -17,9 +17,9 @@ type CmdContext = CommandContext<Context> | ReplyMessage
  * Генерирует или @упоминание к пользователю или fullName пользователя и гиперссылку на его профиль.
  * @param param Либо Context, либо объект состоящий из username, userId, firstName и lastName.
  */
-function generateHTMLUserHyperlink (param: CmdContext): string
+function generateHTMLUserHyperlink (param: CmdContext | Context): string
 function generateHTMLUserHyperlink (param: Data): string
-function generateHTMLUserHyperlink (param: CmdContext | Data): string {
+function generateHTMLUserHyperlink (param: CmdContext | Data | Context): string {
   let username: string | undefined
 
   // Получаем username.

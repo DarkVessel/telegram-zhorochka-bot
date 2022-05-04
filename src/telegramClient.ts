@@ -21,9 +21,7 @@ configManager.start().then(async () => {
 
   // Вызываем в боте функцию старта обработчиков.
   // Проверьте classes/TelegramClient.ts чтобы понять, о чём я.
-  await bot.startHandlers()
-  await bot.start()
-  logmanager.log('CLIENT', 'Login!')
+  bot.login()
 }).catch(err => {
   console.error('>>> Произошла ошибка при попытке бота залогиниться!')
   throw err

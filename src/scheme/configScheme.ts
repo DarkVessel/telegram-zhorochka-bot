@@ -1,7 +1,7 @@
 import { DataType } from 'sequelize-typescript'
-import ConfigSchema from './interfaces/ConfigSchema'
+import ConfigScheme from '../interfaces/ConfigScheme'
 
-const schema: ConfigSchema = {
+const scheme: ConfigScheme = {
   logChat: {
     type: 'number',
     typeDB: DataType.BIGINT,
@@ -52,4 +52,4 @@ const schema: ConfigSchema = {
   }
 }
 
-export default schema
+export default scheme

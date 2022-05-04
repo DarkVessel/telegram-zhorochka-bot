@@ -11,7 +11,7 @@ interface Tags {
  * @param ctx Context сообщения от которого нужно сгенерировать теги.
  * @param tags Ваши дополнительные теги
  */
-function generateBasicDialogTags (ctx: CommandContext<Context>, tags?: Tags): Tags {
+function generateBasicDialogTags (ctx: CommandContext<Context> | Context, tags?: Tags): Tags {
   const obj1: Tags = {
     username: generateHTMLUserHyperlink(ctx),
     fullName: generateHTMLUserHyperlink({

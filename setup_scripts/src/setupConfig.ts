@@ -1,5 +1,5 @@
 import ConfigManager from '../../src/classes/ConfigManager'
-import configSchema from '../../src/configSchema'
+import configSchema from '../../src/scheme/configScheme'
 import ConfigKeys from '../../src/interfaces/ConfigKeys'
 
 import colorTheText from './utils/colorTheText'
@@ -7,11 +7,13 @@ import input from './utils/input'
 
 const configManager = new ConfigManager()
 module.exports = async () => {
+  console.log(colorTheText('yellow', 'Подождите, подключаюсь к базе данных...'))
   // Обновляем информацию о конфиге.
   await configManager.start()
   // Отключить логи от LogManager.
   process.env.DISABLE_LOGGING = 'true'
 
+  console.clear()
   console.log(colorTheText('yellow', `Настроим config.json!
 Для пропуска ненужных настроек, напишите skip, тогда применится дефолтное значение.`))
 

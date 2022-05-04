@@ -3,18 +3,13 @@ import { Sequelize } from 'sequelize-typescript'
 import LogManager from './LogManager'
 import { relative } from 'path'
 
-// Интерфейсы и типы.
-import UnloadedEvent from '../interfaces/UnloadedEvent'
-import { Options } from 'sequelize/types'
-
+interface UnloadedModel {
+  fileName: string,
+  error: string
+}
 const logmanager = new LogManager('./src/classes/SequelizeDB.ts')
 class SequelizeDB extends Sequelize {
-  public unloadedModels: Array<UnloadedEvent>
-
-  constructor (args: Options | undefined) {
-    super(args)
-    this.unloadedModels = []
-  }
+  static unloadedModels: Array<UnloadedModel> = []
 
   /**
    * Запуск сканирования всех моделей и синхронизации их с базой данных.
@@ -26,10 +21,10 @@ class SequelizeDB extends Sequelize {
     logmanager.log('SEQUELIZE', 'Загрузка моделей завершена!')
 
     // Если есть не загруженные модели.
-    if (this.unloadedModels.length) {
+    if (SequelizeDB.unloadedModels.length) {
       logmanager.warn('SEQUELIZE',
-        `Не было загружено ${this.unloadedModels.length} моделей..`,
-        this.unloadedModels.map((d, i) => `${i + 1}. ${d.filename} (${d.error})`).join('\n'))
+        `Не было загружено ${SequelizeDB.unloadedModels.length} моделей..`,
+        SequelizeDB.unloadedModels.map((d, i) => `${i + 1}. ${d.fileName} (${d.error})`).join('\n'))
     }
 
     logmanager.log('SEQUELIZE', 'Синхронизация моделей...')
@@ -66,9 +61,8 @@ class SequelizeDB extends Sequelize {
         // Загружаем файл.
         require(pathRelative)
       } catch (error) {
-        if (!(error instanceof Error)) return
-        this.unloadedModels.push({ error, filename: file })
-        logmanager.error('SEQUELIZE', `Ошибка при загрузке "${path}${file}"`, error.stack)
+        SequelizeDB.unloadedModels.push({ error: String(error), fileName: file })
+        logmanager.error('SEQUELIZE', `Ошибка при загрузке "${path}${file}"`, String(error))
       }
     }
   }

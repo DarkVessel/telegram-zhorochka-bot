@@ -25,13 +25,13 @@ const strip = '-'.repeat(50)
  * ```js
  * const logManager = new LogManager('./src/classes/LogManager.ts')
  * logManager.log('DATABASE', 'Подключение выполнилось успешно!')
- * logManager.log('DATABASE', 'Подключение выполнилось успешно!', [`Дополнительная информация: ...`])
+ * logManager.log('DATABASE', 'Подключение выполнилось успешно!', undefined, [`Дополнительная информация: ...`])
  * ```
  * @example Пример использования функции .warn/.error
  * ```js
  * logManager.warn('DATABASE', 'Слишком долгое подключение.')
  * logManager.warn('DATABASE', 'Произошла ошибка при отправке чего-то', 'Текст ошибки.')
- * logManager.warn('DATABASE', 'Произошла ошибка при отправке чего-то', 'Текст ошибки.', ['Дополнительная информация...'])
+ * logManager.warn('DATABASE', 'Произошла ошибка при отправке чего-то', 'Текст ошибки.', undefined, ['Дополнительная информация...'])
  * ```
  */
 class LogManager {
@@ -58,10 +58,11 @@ class LogManager {
    * @param typeConsole { 'log' | 'error' | 'warn' } - Влияет на то, какая функция вызовется. console.error, console.warn или console.log
    * @param typeLog Тип [ЛОГА]
    * @param title - Сообщение.
+   * @param color - Цвет, просто число.
    * @param blocks - Дополнительные блоки сообщений.
    * @returns { returnMethods }
    */
-  private async _send (typeConsole: 'log' | 'error' | 'warn', typeLog: string, title: string, blocks?: Array<string>): returnMethods {
+  private async _send (typeConsole: 'log' | 'error' | 'warn', typeLog: string, title: string, color?: number | undefined, blocks?: Array<string>): returnMethods {
     if (process.env.DISABLE_LOGGING) return
 
     // Получаем время в формате "Hours:Min:Sec"
@@ -83,7 +84,7 @@ class LogManager {
     if (process.env.NO_COLOR) {
       console[typeConsole](`[${typeLog.toUpperCase}: ${time}] >> ${title}`)
     } else {
-      console[typeConsole](`\x1B[38;5;${colors[typeConsole]}m\x1B[1m[${typeLog.toUpperCase()}: ${time}]\x1B[22m\x1B[39m >> ${title}`)
+      console[typeConsole](`\x1B[38;5;${color ?? colors[typeConsole]}m\x1B[1m[${typeLog.toUpperCase()}: ${time}]\x1B[22m\x1B[39m >> ${title}`)
     }
 
     // Если есть блоки дополнительные - выводим их.
@@ -114,70 +115,75 @@ class LogManager {
       formatBlocks = blocks.map(b => `\`\`\`\n${b}\n\`\`\``).join('\n')
     }
 
-    // Отправка сообщения в чат.
-    const sendMessage = LogManager.telegramClient.api
-      .sendMessage(LogManager.config.logChat,
-        `>> *${this.path}*\n[[ ${typeLog.toUpperCase()} ]] >> ${title}\n${formatBlocks ?? ''}`,
-        { parse_mode: 'Markdown' })
+    LogManager.telegramClient.api.getChat(LogManager.config.logChat)
+      .then(() => {
+        // Отправка сообщения в чат.
+        const sendMessage = LogManager.telegramClient.api
+          .sendMessage(<number>LogManager.config.logChat,
+            `>> *${this.path}*\n[[ ${typeLog.toUpperCase()} ]] >> ${title}\n${formatBlocks ?? ''}`,
+            { parse_mode: 'Markdown' })
 
-    sendMessage.catch((err) => {
-      console.error('[ERROR] Произошла ошибка при попытке отправить сообщение.\n' + err.stack)
-    })
-
-    return sendMessage
+        return sendMessage
+      })
+      .catch((err) => {
+        console.error('[LOG_MANAGER_ERROR] Произошла ошибка при попытке отправить сообщение. Чата не существует!\n' + err.stack)
+      })
   }
 
   /**
    * Отправить обычный лог.
    * @param type Тип лога, любая строка.
    * @param title Основное сообщение.
+   * @param color - Цвет, просто число.
    * @param blocks Дополнительные блоки.
    * @example ```js
    * logManager.log('DATABASE', 'Подключение выполнилось успешно!')
-   * logManager.log('DATABASE', 'Подключение выполнилось успешно!', [`Дополнительная информация: ...`])
+   * logManager.log('DATABASE', 'Подключение выполнилось успешно!', undefined, [`Дополнительная информация: ...`])
    * ```
    * @returns { returnMethods }
    */
-  public log (type: string, title: string, blocks?: Array<string>): returnMethods {
-    return this._send('log', type, title, blocks)
+  public log (type: string, title: string, color?: number | number, blocks?: Array<string>): returnMethods {
+    return this._send('log', type, title, color, blocks)
   }
 
   /**
    * Отправить лог с предупреждением.
    * @param type Тип лога, любая строка.
    * @param title Основное сообщение.
+   * @param color - Цвет, просто число.
    * @param blocks Дополнительные блоки.
    * @example ```js
    * logManager.warn('DATABASE', 'Слишком долгое подключение.')
    * logManager.warn('DATABASE', 'Произошла ошибка при отправке чего-то', 'Текст ошибки.')
-   * logManager.warn('DATABASE', 'Произошла ошибка при отправке чего-то', 'Текст ошибки.', ['Дополнительная информация...'])
+   * logManager.warn('DATABASE', 'Произошла ошибка при отправке чего-то', 'Текст ошибки.', undefined, ['Дополнительная информация...'])
    * ```
    * @returns { returnMethods }
    */
-  public warn (type: string, title: string, warn?: string, blocks?: Array<string>): returnMethods {
+  public warn (type: string, title: string, warn?: string, color?: number | number, blocks?: Array<string>): returnMethods {
     if (!blocks) blocks = []
     if (warn) blocks.push(warn)
 
-    return this._send('warn', type, title, blocks)
+    return this._send('warn', type, title, color, blocks)
   }
 
   /**
    * Отправить лог c ошибкой.
    * @param type Тип лога, любая строка.
    * @param title Основное сообщение.
+   * @param color - Цвет, просто число.
    * @param blocks Дополнительные блоки.
    * @example ```js
    * logManager.error('CLIENT', 'Произошзла какая-то ошибка.')
    * logManager.error('CLIENT', 'Произошла какая-то ошибка.', 'Текст ошибки.')
-   * logManager.error('CLIENT', 'Произошла какая-то ошибка.', 'Текст ошибки.', ['Дополнительная информация...'])
+   * logManager.error('CLIENT', 'Произошла какая-то ошибка.', 'Текст ошибки.', undefined, ['Дополнительная информация...'])
    * ```
    * @returns { returnMethods }
    */
-  public error (type: string, title: string, error?: string, blocks?: Array<string>): returnMethods {
+  public error (type: string, title: string, error?: string, color?: number | number, blocks?: Array<string>): returnMethods {
     if (!blocks) blocks = []
     if (error) blocks.push(error)
 
-    return this._send('error', type, title, blocks)
+    return this._send('error', type, title, color, blocks)
   }
 }
 

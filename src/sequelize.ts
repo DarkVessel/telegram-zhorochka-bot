@@ -12,14 +12,16 @@ const sequelize = new SequelizeDB({
   host: MYSQL_HOST,
   port: Number(MYSQL_PORT),
   dialect: 'mysql',
-  logging: process.env.DISABLE_LOGGING_MYSQL ? false : console.log
+  logging: process.env.DISABLE_LOGGING_MYSQL
+    ? false
+    : (t) => logmanager.log('MySQL', t, 2)
 })
 
 sequelize.authenticate().then(async () => {
   logmanager.log('SEQUELIZE', 'Connect!')
   sequelize.start('build/src/models/')
 }).catch((err) => {
-  logmanager.error('SEQUELIZE', 'Ошибка подключения к MySQL!', err.stack, [
+  logmanager.error('SEQUELIZE', 'Ошибка подключения к MySQL!', err.stack, undefined, [
     `Подключение проводилось по таким данным:
 
 > Host: ${MYSQL_HOST}

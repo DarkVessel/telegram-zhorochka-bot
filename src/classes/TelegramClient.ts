@@ -1,36 +1,45 @@
-import { Bot, BotConfig, Context } from 'grammy'
+import { Bot } from 'grammy'
+import LogManager from './LogManager'
 
-// Инициализация классов для взаимодействия с командами, ивентами и конфигом.
-import CommandManager from './CommandManager'
-import EventsManager from './EventsManager'
+// Композиции.
+import { Commands } from '../commands/index'
+import { Events } from '../events'
 
+// Схема команд.
+import commandScheme from '../scheme/commandsScheme'
+const logManager = new LogManager('./src/classes/TelegramClient.ts')
 // Создаём класс, который наследуется от grammY.
-// Наследованный класс легко расширять своими функциями.
 class TelegramClient extends Bot {
-  public constructor (token: string, options?: BotConfig<Context> | undefined) {
-    // Передаём токен и опции Телеграфу.
-    super(token, options)
+  /** Время, когда был запущен бот (подключился к сети) */
+  public initTime: number | undefined
 
-    // При Ctrl + C или других сигналах, бот будет отключатся от Телеграмма.
-    process.once('SIGINT', () => this.stop())
-    process.once('SIGTERM', () => this.stop())
+  /** Запуск бота. */
+  public async login () {
+    this.catch((err) => {
+      logManager.error('CLIENT', 'Была перехвачена какая-то ошибка!', err.stack)
+    })
+    this._loadComposers()
+    this.updateCommandInformation()
+    this.start()
+    this.initTime = Date.now()
+    logManager.log('CLIENT', 'Login!')
   }
 
-  /**
-   * Функция, которая запускает все обработчики.
-   */
-  public async startHandlers () {
-    const commandManager = new CommandManager('build/src/commands/')
-    const eventsManager = new EventsManager('build/src/events/')
+  /** Загрузить композиторы. */
+  private _loadComposers () {
+    this.use(Commands)
+    this.use(Events)
+  }
 
-    commandManager.start()
+  /** Обновляет информацию о командах (подсказки при вводе команды) */
+  public async updateCommandInformation () {
+    logManager.log('CLIENT', 'Обновляю информацию о командах...')
+    const commands = commandScheme
+      .filter(c => c.show)
+      .map(c => ({ command: c.name, description: c.shortDescription }))
 
-    // Загружаем команды в клиент.
-    commandManager.commands.forEach((value) => {
-      // bot.command обрабатывает /команды
-      this.command(value.name, async (ctx) => CommandManager.commandCallHandler(value, ctx))
-    })
-    eventsManager.start()
+    await this.api.setMyCommands(commands)
+    logManager.log('CLIENT', 'Информация о командах обновлена!')
   }
 }
 

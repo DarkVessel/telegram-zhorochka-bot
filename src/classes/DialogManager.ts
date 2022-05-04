@@ -29,6 +29,20 @@ class DialogManager {
     this.messageId = messageId
   }
 
+  /** Изменить текст, заменить {теги} */
+  static replaceTags (text: string, tags: ReplaceArgument): string {
+    const keys = Object.keys(tags)
+    for (const tag of keys) {
+      text = text.replace('{' + tag + '}', tags[tag])
+    }
+    return text
+  }
+
+  /** Комбинация getRandomElement и replaceTags */
+  static getRandomElementAndReplace (texts: Array<string>, tags: ReplaceArgument): string {
+    return DialogManager.replaceTags(getRandomElement(texts), tags)
+  }
+
   /**
    * Callback для обработки ошибок, связанные с удалением сообщений.
    * @param err Текст ошибки.
@@ -50,15 +64,7 @@ class DialogManager {
       if (!options.parseMode) options.parseMode = 'HTML'
 
       // Получаем рандомный элемент.
-      let text = getRandomElement(contents)
-
-      // Заменяем {теги}
-      if (options.tags) {
-        const keys = Object.keys(options.tags)
-        for (const tag of keys) {
-          text = text.replace('{' + tag + '}', options.tags[tag])
-        }
-      }
+      const text = DialogManager.getRandomElementAndReplace(contents, options.tags ?? {})
 
       // Отправляем сообщение.
       const message = await bot.api.sendMessage(this.chatId, text, {
@@ -75,7 +81,7 @@ class DialogManager {
         }, ConfigManager.data.messageDeletionTimeout)
       }
     } catch (err) {
-      logManager.error('DIALOG_MANAGER', 'Произошла какая-то ошибка, при обработке лога.', String(err), [`ID Чата: ${this.chatId}\nID сообщения: ${this.messageId}`])
+      logManager.error('DIALOG_MANAGER', 'Произошла какая-то ошибка, при обработке лога.', String(err), undefined, [`ID Чата: ${this.chatId}\nID сообщения: ${this.messageId}`])
     }
   }
 }
