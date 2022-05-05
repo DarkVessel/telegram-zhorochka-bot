@@ -1,4 +1,4 @@
-import checkPermissions from '../../utils/checkPermissions'
+import { checkPermissions } from '../../utils/index'
 import { Composer } from 'grammy'
 
 export const cmd = new Composer()
@@ -12,5 +12,7 @@ cmd
     checkMeAdmin: false
   }))
   .use((ctx) => {
-    ctx.reply('Hi!')
+    ctx.reply('Hi!', {
+      parse_mode: 'MarkdownV2'
+    })
   })

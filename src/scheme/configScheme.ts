@@ -1,10 +1,10 @@
-import { DataType } from 'sequelize-typescript'
+import { DataTypes } from 'sequelize'
 import ConfigScheme from '../interfaces/ConfigScheme'
 
 const scheme: ConfigScheme = {
   logChat: {
     type: 'number',
-    typeDB: DataType.BIGINT,
+    typeDB: DataTypes.BIGINT,
     default: undefined,
     description: 'ID группы, куда будут скидываться логи и ошибки.',
     mutable: true,
@@ -12,7 +12,7 @@ const scheme: ConfigScheme = {
   },
   adminChat: {
     type: 'number',
-    typeDB: DataType.BIGINT,
+    typeDB: DataTypes.BIGINT,
     default: undefined,
     description: 'ID группы, где сидят Администраторы вашего проекта. Туда будет скидываться важная информация.',
     mutable: true,
@@ -20,7 +20,7 @@ const scheme: ConfigScheme = {
   },
   sendLogsToAGroup: {
     type: 'boolean',
-    typeDB: DataType.BOOLEAN,
+    typeDB: DataTypes.BOOLEAN,
     default: false,
     description: 'Отправлять логи в группу?',
     mutable: true,
@@ -28,7 +28,7 @@ const scheme: ConfigScheme = {
   },
   botOwner: {
     type: 'number',
-    typeDB: DataType.BIGINT,
+    typeDB: DataTypes.BIGINT,
     default: undefined,
     description: 'ID аккаунта создателя бота.',
     mutable: false,
@@ -36,7 +36,7 @@ const scheme: ConfigScheme = {
   },
   urlToRules: {
     type: 'string',
-    typeDB: DataType.STRING,
+    typeDB: DataTypes.STRING,
     default: undefined,
     description: 'URL-ссылка на правила вашего чата.',
     mutable: true,
@@ -44,7 +44,7 @@ const scheme: ConfigScheme = {
   },
   messageDeletionTimeout: {
     type: 'number',
-    typeDB: DataType.INTEGER,
+    typeDB: DataTypes.INTEGER,
     default: 11500,
     description: 'Тайм-аут удаления ненужных сообщений, к примеру о том, что пользователь неправльно ввёл команду. Значение 0 отключает эту функцию.',
     mutable: true,

@@ -47,9 +47,9 @@
       "diagnostics": false, // Показывать ли диагностическую информацию?
       "disableSizeLimit": true, // Отключить ограничение размера в проекте JavaScript.
       "emitBOM": false, // Записывать ли UTF-8 Byte Order Mark (BOM) в начало итогового файла?
-      "emitDecoratorMetadata": true, // Создавать метаданные для объявлений декораторов в исходном коде?
+      "emitDecoratorMetadata": false, // Создавать метаданные для объявлений декораторов в исходном коде?
       "esModuleInterop": false, // Создать хелперы __importStar и __importDefault для обеспечения совместимости с экосистемой Babel и включить allowSyntheticDefaultImports для совместимости с системой типов.
-      "experimentalDecorators": true, // Включить экспериментальную поддержку декораторов EcmaScript?
+      "experimentalDecorators": false, // Включить экспериментальную поддержку декораторов EcmaScript?
       "forceConsistentCasingInFileNames": true, // Запретить несогласованные ссылки на один и тот же файл?
       "inlineSources": false, // Помещать ли source в итоговый файл рядом с source map?
       "inlineSourceMap": false, // Помещать ли source map в итоговый файл, вместо того чтобы иметь отдельный файл с source map?

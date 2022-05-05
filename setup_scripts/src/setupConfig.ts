@@ -15,7 +15,7 @@ module.exports = async () => {
 
   console.clear()
   console.log(colorTheText('yellow', `Настроим config.json!
-Для пропуска ненужных настроек, напишите skip, тогда применится дефолтное значение.`))
+Для пропуска ненужных настроек просто ничего не пишите, тогда применится значение по-умолчанию или то, которое у вас уже стоит.`))
 
   // Изменяемая переменная, равняется true если в базу данных нужно что-то записать.
   let saveToDB = false
@@ -32,10 +32,10 @@ module.exports = async () => {
     console.log(`Тип: ${colorTheText('blue', `${data.type}`)}`)
     console.log(`По умолчанию: ${colorTheText('blue', `${data.default}`)}`)
     console.log(`Описание: ${colorTheText('blue', `${data.description}`)}`)
-    console.log(`Ваше значение установлено: ${colorTheText('blue', `${ConfigManager.data[key] ?? 'Не установлено.'}`)}`)
+    if (ConfigManager.data[key]) console.log(`Ваше значение установлено: ${colorTheText('blue', String(ConfigManager.data[key]))}`)
 
-    const value = await input(colorTheText('yellow', '>>> Укажите новое значение или skip чтобы оставить старое: '))
-    if (value === 'skip') {
+    const value = await input(colorTheText('yellow', '>>> Укажите новое значение или просто нажмите Enter чтобы оставить всё как есть: '))
+    if (!value) {
       // Проверяем, есть ли значение по такому ключу в ConfigManager
       if ((ConfigManager.data[key] ?? false) === false) continue
 
@@ -51,11 +51,11 @@ module.exports = async () => {
       // @ts-ignore
       ConfigManager.data[key] = <undefined>value
     }
-    console.log(colorTheText('green', 'Установлено значение: ' + ConfigManager.data[key]))
+    if (ConfigManager.data[key]) console.log(colorTheText('green', 'Установлено значение: ' + ConfigManager.data[key]))
   }
 
   if (!saveToDB) {
-    console.log(`>>> ${colorTheText('green', 'Настройка не требуется!')}`)
+    console.log(`>>> ${colorTheText('green', 'Нечего сохранять.')}`)
     return
   }
   console.log()

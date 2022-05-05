@@ -1,5 +1,5 @@
 import { ModelAttributes } from 'sequelize/types'
-import { Model } from 'sequelize-typescript'
+import { Model } from 'sequelize'
 import configSchema from '../scheme/configScheme'
 import sequelize from '../sequelize'
 

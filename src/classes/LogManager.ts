@@ -4,6 +4,7 @@ import { timezone } from 'strftime'
 import { Message } from 'grammy/out/platform.node'
 import ConfigKeys from '../interfaces/ConfigKeys'
 import TelegramClient from './TelegramClient'
+import adaptTextToHTML from '../utils/adaptTextToHTML'
 
 const strftime = timezone(180) // 180 - это московская таймзона.
 const colors = {
@@ -108,11 +109,11 @@ class LogManager {
       !LogManager.config.logChat) return
 
     // Форматируем дополнительные блоки для сообщений.
-    let formatBlocks: string = ''
+    let formatBlocks = ''
     if (blocks?.length) {
       title += '\n' // Добавляем отступ.
 
-      formatBlocks = blocks.map(b => `\`\`\`\n${b}\n\`\`\``).join('\n')
+      formatBlocks = blocks.map(b => `<code>${adaptTextToHTML(b)}</code>`).join('\n')
     }
 
     LogManager.telegramClient.api.getChat(LogManager.config.logChat)
@@ -120,8 +121,8 @@ class LogManager {
         // Отправка сообщения в чат.
         const sendMessage = LogManager.telegramClient.api
           .sendMessage(<number>LogManager.config.logChat,
-            `>> *${this.path}*\n[[ ${typeLog.toUpperCase()} ]] >> ${title}\n${formatBlocks ?? ''}`,
-            { parse_mode: 'Markdown' })
+            `>> <b>${adaptTextToHTML(this.path)}</b>\n[${adaptTextToHTML(typeLog.toUpperCase())}] >> ${adaptTextToHTML(title)}\n${formatBlocks ?? ''}`,
+            { parse_mode: 'HTML' })
 
         return sendMessage
       })

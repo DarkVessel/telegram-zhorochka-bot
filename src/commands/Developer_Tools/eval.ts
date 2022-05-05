@@ -1,6 +1,5 @@
-import checkPermissions from '../../utils/checkPermissions'
+import { checkPermissions, getArgs } from '../../utils/index'
 import { Composer, InlineKeyboard } from 'grammy'
-import getArgs from '../../utils/getArgs'
 import { inspect } from 'util'
 
 import bot from '../../telegramClient'

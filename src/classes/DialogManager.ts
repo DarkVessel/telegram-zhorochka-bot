@@ -1,4 +1,4 @@
-import getRandomElement from '../utils/getRandomElement'
+import { getRandomElement } from '../utils/index'
 import ConfigManager from './ConfigManager'
 import LogManager from './LogManager'
 import bot from '../telegramClient'
@@ -9,7 +9,6 @@ interface ReplaceArgument {
 }
 
 interface Options {
-  parseMode?: 'HTML' | 'Markdown'
   deleteMsg?: boolean,
   tags?: ReplaceArgument,
 }
@@ -61,14 +60,12 @@ class DialogManager {
    */
   public async send (contents: Array<string>, options: Options = {}) {
     try {
-      if (!options.parseMode) options.parseMode = 'HTML'
-
       // Получаем рандомный элемент.
       const text = DialogManager.getRandomElementAndReplace(contents, options.tags ?? {})
 
       // Отправляем сообщение.
       const message = await bot.api.sendMessage(this.chatId, text, {
-        parse_mode: options.parseMode,
+        parse_mode: 'HTML',
         reply_to_message_id: this.messageId,
         allow_sending_without_reply: true
       })
@@ -81,7 +78,7 @@ class DialogManager {
         }, ConfigManager.data.messageDeletionTimeout)
       }
     } catch (err) {
-      logManager.error('DIALOG_MANAGER', 'Произошла какая-то ошибка, при обработке лога.', String(err), undefined, [`ID Чата: ${this.chatId}\nID сообщения: ${this.messageId}`])
+      logManager.error('DIALOG_MANAGER', 'Произошла какая-то ошибка.', String(err), undefined, [`ID Чата: ${this.chatId}\nID сообщения: ${this.messageId}`])
     }
   }
 }

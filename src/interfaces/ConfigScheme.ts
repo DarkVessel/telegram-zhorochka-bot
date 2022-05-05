@@ -1,4 +1,4 @@
-import { DataType } from 'sequelize-typescript'
+import { DataTypes } from 'sequelize'
 
 type ValidScalars = undefined | null | string | boolean | number;
 /**
@@ -10,7 +10,7 @@ interface ConfigSchema {
     /**
      * Сюда передаётся DataTypes.TYPE
      */
-    typeDB: typeof DataType[keyof typeof DataType];
+    typeDB: typeof DataTypes[keyof typeof DataTypes];
     default: ValidScalars;
     description?: string;
     mutable: boolean;

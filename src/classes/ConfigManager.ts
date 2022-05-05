@@ -1,10 +1,10 @@
 // В configSchema хранятся данные о том, как устроен конфиг.
 import configSchema from '../scheme/configScheme'
-import { Model } from 'sequelize-typescript'
+import { Model } from 'sequelize'
 
 // Интерфейс и модель Config-a.
 import ConfigKeys from '../interfaces/ConfigKeys'
-import Configuration from '../models/Configuration'
+import Configuration from '../models/Configuration.model'
 type modelType = Model<any, any>
 
 interface DefaultConfiguration {

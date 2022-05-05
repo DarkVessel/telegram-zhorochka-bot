@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, statSync } from 'fs'
-import { Sequelize } from 'sequelize-typescript'
+import { Sequelize } from 'sequelize'
 import LogManager from './LogManager'
 import { relative } from 'path'
 
