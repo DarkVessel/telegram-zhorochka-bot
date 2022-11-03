@@ -1,6 +1,4 @@
-
-- Мы переехали на новый репозиторий: https://gitlab.com/osel-devteam/telegram-zhorochka-bot
-- We have moved to a new repository: https://gitlab.com/osel-devteam/telegram-zhorochka-bot
+# На стадии переписывания...
 
 # ~~ВНИМАНИЕ | WARNING~~
 ~~**БОТ НАХОДИТСЯ НА СТАДИИ РАЗРАБОТКИ, В НАСТОЯЩЕЕ ВРЕМЯ Я НЕ РЕКОМЕНДУЮ ЕГО РАЗВОРАЧИВАТЬ У СЕБЯ НА ХОСТЕ. ДОКУМЕНТАЦИЯ ТАКЖЕ СЧИТАЕТСЯ УСТАРЕВШЕЙ ДО ТЕХ ПОР, ПОКА Я НЕ РЕЛИЗНУ 1.0.0**~~
